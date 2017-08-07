@@ -38,8 +38,8 @@ class oscillator2{
 				cosCoeffPhi[name] ~= uniform(-1.0f, 1.0f, rnd);
 			}
 
-			omegaTheta[name] = uniform(-1.0f, 1.0f, rnd);
-			omegaPhi[name] = uniform(-1.0f, 1.0f, rnd);
+			omegaTheta[name] = uniform(-10.0f, 10.0f, rnd);
+			omegaPhi[name] = uniform(-10.0f, 10.0f, rnd);
 		}
 
 		//rehashすると最適化されるらしい．使いたかっただけ．
@@ -72,10 +72,10 @@ class oscillator2{
 			foreach(string s, th; theta) deltaTheta[s] = omegaTheta[s];
 
 			foreach(string s, me; theta){
-				for(int i=0; i<degree; i++){
+				for(int i=1; i<=degree; i++){
 					foreach(other; theta){
-						deltaTheta[s] += sinCoeffTheta[s][i] * sin( i*(other-me) );
-						deltaTheta[s] += cosCoeffTheta[s][i] * cos( i*(other-me) );
+						deltaTheta[s] += sinCoeffTheta[s][i-1] * sin( i*(other-me) );
+						deltaTheta[s] += cosCoeffTheta[s][i-1] * cos( i*(other-me) );
 					}
 				}
 			}
@@ -92,10 +92,10 @@ class oscillator2{
 			foreach(string s, ph; phi) deltaPhi[s] = omegaPhi[s];
 
 			foreach(string s, me; phi){
-				for(int i=0; i<degree; i++){
+				for(int i=1; i<=degree; i++){
 					foreach(other; theta){
-						deltaPhi[s] += sinCoeffPhi[s][i] * sin( i*(other-me) );
-						deltaPhi[s] += cosCoeffPhi[s][i] * cos( i*(other-me) );
+						deltaPhi[s] += sinCoeffPhi[s][i-1] * sin( i*(other-me) );
+						deltaPhi[s] += cosCoeffPhi[s][i-1] * cos( i*(other-me) );
 					}
 				}
 			}

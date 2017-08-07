@@ -167,9 +167,9 @@ class chorodog{
 						*/
 
 			//最大出力．index ; (x, y, z)=(0, 1, 2)(たぶん？)
-			g6dofs[s].setMaxRotationalMotorForce( 0, 5.0);
-			g6dofs[s].setMaxRotationalMotorForce( 1, 5.0);
-			g6dofs[s].setMaxRotationalMotorForce( 2, 5.0);
+			g6dofs[s].setMaxRotationalMotorForce( 0, 500.0);
+			g6dofs[s].setMaxRotationalMotorForce( 1, 500.0);
+			g6dofs[s].setMaxRotationalMotorForce( 2, 500.0);
 			g6dofs[s].setMaxLinearMotorForce( zeroVec3 );
 		}
 
@@ -182,14 +182,14 @@ class chorodog{
 	void move(int sequence){
 
 		foreach(string s, dof; g6dofs){
-				oscil.setTheta(dof.getAngle(0));
-				oscil.setPhi(dof.getAngle(1));
+				oscil.setTheta(s, dof.getAngle(0));
+				oscil.setPhi(s, dof.getAngle(1));
 		}
 
-		deltaTheta = oscil.calculateDeltaTheta();
-		deltaPhi = oscil.calculateDeltaPhi();
+		float[string] deltaTheta = oscil.calculateDeltaTheta();
+		float[string] deltaPhi = oscil.calculateDeltaPhi();
 
-		foreach(string s, dof; g6dofs) dof.setRotationalTargetVelocity( createVec3( deltaTheta[s], deltaPhi[s], 0.0f ) );
+		foreach(string s, dof; g6dofs) dof.setRotationalTargetVelocity( createVec3( 100.0*deltaTheta[s], 100.0*deltaPhi[s], 0.0f ) );
 
 
 		/+
