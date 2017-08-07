@@ -8,6 +8,7 @@ import std.algorithm;
 
 import japariSDK.japarilib;
 import GA;
+import Oscillator;
 
 Random rnd;
 
@@ -88,6 +89,7 @@ class chorodog{
 	elementNode[string] parts;
 	hingeConstraint[string] hinges;
 	generic6DofConstraint[string] g6dofs;
+	oscillator2 oscil;
 	float neko = 0;
 
 	float[string][20] dna;
@@ -105,6 +107,10 @@ class chorodog{
 				}
 			}
 		}
+
+		oscil = new oscillator2(5);
+		foreach(string s, dof; g6dofs) oscil.init(s);
+		oscil.rehash();
 
 	}
 
@@ -174,12 +180,27 @@ class chorodog{
 	}
 
 	void move(int sequence){
+
+		foreach(string s, dof; g6dofs){
+				oscil.setTheta(dof.getAngle(0));
+				oscil.setPhi(dof.getAngle(1));
+		}
+
+		deltaTheta = oscil.calculateDeltaTheta();
+		deltaPhi = oscil.calculateDeltaPhi();
+
+		foreach(string s, dof; g6dofs) dof.setRotationalTargetVelocity( createVec3( deltaTheta[s], deltaPhi[s], 0.0f ) );
+
+
+		/+
 		if(hinges.length!=0) foreach(string s, hinge; hinges){
 			if(hingeParams[s].enabled){
 				float target = abs(hingeParams[s].limitLower-hingeParams[s].limitUpper) * dna[sequence][s] * 2.0/PI;
 				hinge.setMotorTarget(target, 0.5);
 			}
 		}
+		+/
+		/+
 		g6dofs["Constraint.003"].setRotationalTargetVelocity(createVec3(0.0f,1.0*sin(neko), 0.0f));
 		g6dofs["Constraint.001"].setRotationalTargetVelocity(createVec3(0.0f,1.0*sin(neko-PI/2.0), 0.0f));
 		g6dofs["Constraint.002"].setRotationalTargetVelocity(createVec3(0.0f,1.0*sin(neko-PI), 0.0f));
@@ -187,6 +208,7 @@ class chorodog{
 
 		neko += 0.3f;
 		if(neko>=2.0*3.14f) neko -= 2.0*3.14f;
+		+/
 
 			/*
 						uniform(g6dofParams[s].angLimitLower.getx(), g6dofParams[s].angLimitUpper.getx(), rnd),
