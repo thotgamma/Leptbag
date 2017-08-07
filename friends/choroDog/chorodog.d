@@ -7,7 +7,7 @@ import std.conv;
 import std.algorithm;
 
 import japariSDK.japarilib;
-import libGA;
+import GA;
 
 Random rnd;
 
@@ -30,6 +30,7 @@ struct partParam{
 	vec3 scale;
 	quat rotation;
 	float mass;
+	float friction;
 
 }
 
@@ -120,6 +121,7 @@ class chorodog{
 						param("mass",
 							//0.0f)));
 							partParams[s].mass * bodyMass)));
+			parts[s].setFriction(1.5);//partParams[s].friction);
 
 		}
 
@@ -165,7 +167,9 @@ class chorodog{
 			g6dofs[s].setMaxLinearMotorForce( zeroVec3 );
 		}
 
-
+		parts = parts.rehash;
+		hinges = hinges.rehash;
+		g6dofs = g6dofs.rehash;
 
 	}
 
@@ -228,6 +232,7 @@ extern (C) void init(){
 				partParams[name].scale	= createVec3(elem["xscl"].floating, elem["yscl"].floating, elem["zscl"].floating);
 				partParams[name].rotation = createQuat(elem["wqat"].floating, elem["xqat"].floating, elem["yqat"].floating, elem["zqat"].floating);
 				partParams[name].mass = elem["mass"].floating;
+				partParams[name].friction = elem["friction"].floating;
 
 				partParams[name].vertices = createVertexManager();
 
@@ -294,7 +299,9 @@ extern (C) void init(){
 
 			}
 		}
-
+		partParams = partParams.rehash;
+		hingeParams = hingeParams.rehash;
+		g6dofParams = g6dofParams.rehash;
 		chorodogs.length = dogNum;
 
 		foreach(int i, ref elem; chorodogs) elem = new chorodog(to!float(i)*5.0f, 0.0f, -1.0f, true);
@@ -332,9 +339,6 @@ extern (C) void tick(){
 		switch(strategy){
 			case 0:
 				foreach(elem; chorodogs) elem.move(sequence);
-				writeln(chorodogs[0].parts["legBRST"].getFriction());
-				if(generation==0) foreach(part; chorodogs[0].parts) part.setFriction(5000.0);
-				if(generation==30) foreach(part; chorodogs[0].parts) part.setFriction(0.0);
 				break;
 			case 1:
 				if(!evaluation) foreach(elem; chorodogs) elem.move(sequence);
