@@ -36,6 +36,9 @@ class vec3{
 		this->z = R.z;
 		return *this;
 	}
+
+
+
 };
 
 extern "C" vec3* createVec3(float x, float y, float z);

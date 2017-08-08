@@ -8,12 +8,14 @@ import std.algorithm;
 
 import japariSDK.japarilib;
 import GA;
+import DEforOscillator2;
 import Oscillator;
+import params;
 
 Random rnd;
 
-//strategy 0:do not learn, 1:DE, 2:simple GA
-int strategy = 0;
+//strategy 0:do not learn, 1:HingeDE, 2:simple GA, 3:6dofDE
+int strategy = 3;
 
 string measuredPart = "head";
 int dogNum = 80;
@@ -24,62 +26,10 @@ chorodog[] chorodogs;
 
 elementManager[string] partsGenerator;
 
-struct partParam{
-
-	vertexManager vertices;
-	vec3 position;
-	vec3 scale;
-	quat rotation;
-	float mass;
-	float friction;
-
-}
-
-
-
-struct hingeParam{
-
-	string name;
-	vec3 position;
-	vec3 axis1;
-	vec3 axis2;
-	string object1Name;
-	string object2Name;
-	vec3 object1Position;
-	vec3 object2Position;
-	bool enabled;
-	bool useLimit;
-	float limitLower;
-	float limitUpper;
-
-
-}
-
-struct g6dofParam{
-
-	string name;
-	bool enabled;
-	vec3 position;
-	quat rotation;
-	string object1Name;
-	string object2Name;
-	vec3 object1Position;
-	vec3 object2Position;
-	bool[3] useAngLimit;
-	vec3 angLimitLower;
-	vec3 angLimitUpper;
-	bool[3] useLinLimit;
-	vec3 linLimitLower;
-	vec3 linLimitUpper;
-
-}
-
 
 partParam[string] partParams;
 hingeParam[string] hingeParams;
 g6dofParam[string] g6dofParams;
-
-
 
 
 
@@ -89,28 +39,59 @@ class chorodog{
 	elementNode[string] parts;
 	hingeConstraint[string] hinges;
 	generic6DofConstraint[string] g6dofs;
-	oscillator2 oscil;
-	float neko = 0;
+	oscillator2Gene gene;
 
 	float[string][20] dna;
 
 	this(float x, float y, float z, bool initialDNA){
 
+
 		spawn(createVec3(x, y, z));
 
 		if(initialDNA == true){
-			foreach(string s, hinge; hinges){
-				if(hingeParams[s].enabled){
-					for(int row = 0; row < 20; row++){
-						dna[row][s] = uniform(-PI/2, PI/2, rnd);
-					}
-				}
-			}
-		}
+			/*
+			   foreach(string s, hinge; hinges){
+			   if(hingeParams[s].enabled){
+			   for(int row = 0; row < 20; row++){
+			   dna[row][s] = uniform(-PI/2, PI/2, rnd);
+			   }
+			   }
+			   }
+			 */
 
-		oscil = new oscillator2(5);
-		foreach(string s, dof; g6dofs) oscil.init(s);
-		oscil.rehash();
+			gene.init();
+			foreach(part; parts) part.setFriction(gene.friction);
+
+			foreach(string s, dof; g6dofs){
+
+				gene.init(s);
+
+
+				for(int i=0; i<3; i++){
+					if(g6dofParams[s].useAngLimit[i]) g6dofs[s].setRotationalMotor(i);
+					if(g6dofParams[s].useLinLimit[i]) g6dofs[s].setLinearMotor(i);
+				}
+
+
+				vec3 zeroVec3 = createVec3( 0.0, 0.0, 0.0 ); //セッターに同じvec3を入れるとロック
+
+				//for test
+				vec3 testVec3Low = createVec3( -1.57/2.0, -1.57/2.0, -1.57/2.0 );
+				vec3 testVec3Up = createVec3( 1.57/2.0, 1.57/2.0, 1.57/2.0 );
+
+
+				g6dofs[s].setAngularLimit( gene.angLimitLower[s], gene.angLimitUpper[s] );
+				g6dofs[s].setLinearLimit( zeroVec3, zeroVec3 );
+
+				//最大出力．index ; (x, y, z)=(0, 1, 2)(たぶん？)
+				g6dofs[s].setMaxRotationalMotorForce( 0, gene.maxForce[s].getx() );
+				g6dofs[s].setMaxRotationalMotorForce( 1, gene.maxForce[s].gety() );
+				g6dofs[s].setMaxRotationalMotorForce( 2, gene.maxForce[s].getz() );
+
+
+			}
+			gene.rehash();
+		}
 
 	}
 
@@ -126,11 +107,12 @@ class chorodog{
 						param("model",    partParams[s].vertices),
 						param("mass",
 							//0.0f)));
-							partParams[s].mass * bodyMass)));
-			parts[s].setFriction(1.5);//partParams[s].friction);
+				partParams[s].mass * bodyMass)));
+			//gene.friction = partParams[s].friction;
 
 		}
 
+		//ヒンジ
 		foreach(string s, param; hingeParams){
 			hinges[s] = hingeConstraint_create(parts[hingeParams[s].object1Name], parts[hingeParams[s].object2Name],
 					hingeParams[s].object1Position, hingeParams[s].object2Position,
@@ -142,35 +124,13 @@ class chorodog{
 			}
 		}
 
+		//6Dof
 		foreach(string s, param; g6dofParams){
 			g6dofs[s] = generic6DofConstraint_create(parts[g6dofParams[s].object1Name], parts[g6dofParams[s].object2Name],
 					g6dofParams[s].object1Position, g6dofParams[s].object2Position,
 					g6dofParams[s].rotation);
 
-			for(int i=0; i<3; i++){
-				if(g6dofParams[s].useAngLimit[i]) g6dofs[s].setRotationalMotor(i);
-				if(g6dofParams[s].useLinLimit[i]) g6dofs[s].setLinearMotor(i);
-			}
 
-			vec3 zeroVec3 = createVec3( 0.0, 0.0, 0.0 ); //セッターに同じvec3を入れるとロック
-			g6dofs[s].setAngularLimit( g6dofParams[s].angLimitLower, g6dofParams[s].angLimitUpper );
-
-
-			g6dofs[s].setLinearLimit( zeroVec3, zeroVec3 );
-
-
-			/*
-			g6dofs[s].setLinearTargetVelocity(createVec3(
-						uniform(g6dofParams[s].linLimitLower.getx(), g6dofParams[s].linLimitUpper.getx(), rnd),
-						uniform(g6dofParams[s].linLimitLower.gety(), g6dofParams[s].linLimitUpper.gety(), rnd),
-						uniform(g6dofParams[s].linLimitLower.getz(), g6dofParams[s].linLimitUpper.getz(), rnd)));
-						*/
-
-			//最大出力．index ; (x, y, z)=(0, 1, 2)(たぶん？)
-			g6dofs[s].setMaxRotationalMotorForce( 0, 500.0);
-			g6dofs[s].setMaxRotationalMotorForce( 1, 500.0);
-			g6dofs[s].setMaxRotationalMotorForce( 2, 500.0);
-			g6dofs[s].setMaxLinearMotorForce( zeroVec3 );
 		}
 
 		parts = parts.rehash;
@@ -181,45 +141,27 @@ class chorodog{
 
 	void move(int sequence){
 
-		foreach(string s, dof; g6dofs){
-				oscil.setTheta(s, dof.getAngle(0));
-				oscil.setPhi(s, dof.getAngle(1));
+		if(g6dofs.length!=0) foreach(string s, dof; g6dofs){
+			gene.oscil.setTheta(s, dof.getAngle(0));
+			gene.oscil.setPhi(s, dof.getAngle(1));
 		}
 
-		float[string] deltaTheta = oscil.calculateDeltaTheta();
-		float[string] deltaPhi = oscil.calculateDeltaPhi();
+		float[string] deltaTheta = gene.oscil.calculateDeltaTheta();
+		float[string] deltaPhi = gene.oscil.calculateDeltaPhi();
 
-		foreach(string s, dof; g6dofs) dof.setRotationalTargetVelocity( createVec3( 100.0*deltaTheta[s], 100.0*deltaPhi[s], 0.0f ) );
+		foreach(string s, dof; g6dofs) dof.setRotationalTargetVelocity( createVec3(
+					gene.maxVelo[s].getx()*sin(deltaTheta[s]), gene.maxVelo[s].gety()*sin(deltaPhi[s]), 0.0f ) );
 
 
 		/+
-		if(hinges.length!=0) foreach(string s, hinge; hinges){
-			if(hingeParams[s].enabled){
-				float target = abs(hingeParams[s].limitLower-hingeParams[s].limitUpper) * dna[sequence][s] * 2.0/PI;
-				hinge.setMotorTarget(target, 0.5);
+			if(hinges.length!=0) foreach(string s, hinge; hinges){
+				if(hingeParams[s].enabled){
+					float target = abs(hingeParams[s].limitLower-hingeParams[s].limitUpper) * dna[sequence][s] * 2.0/PI;
+					hinge.setMotorTarget(target, 0.5);
+				}
 			}
-		}
-
-		/*
-		g6dofs["Constraint.003"].setRotationalTargetVelocity(createVec3(0.0f,5.0*sin(neko), 0.0f));
-		g6dofs["Constraint.001"].setRotationalTargetVelocity(createVec3(0.0f,5.0*sin(neko-PI/2.0), 0.0f));
-		g6dofs["Constraint.002"].setRotationalTargetVelocity(createVec3(0.0f,5.0*sin(neko-PI), 0.0f));
-		g6dofs["Constraint.004"].setRotationalTargetVelocity(createVec3(0.0f,5.0*sin(neko-PI*3.0/2.0), 0.0f));
-		*/
-
-		foreach(string s, dofs; g6dofs){
-
-			dofs.setRotationalTargetVelocity(createVec3(
-						5.0*uniform(g6dofParams[s].angLimitLower.getx(), g6dofParams[s].angLimitUpper.getx(), rnd),
-						5.0*uniform(g6dofParams[s].angLimitLower.gety(), g6dofParams[s].angLimitUpper.gety(), rnd),
-						5.0*uniform(g6dofParams[s].angLimitLower.getz(), g6dofParams[s].angLimitUpper.getz(), rnd)));
-
-		}
-
-
-		neko += 0.3f;
-		if(neko>=2.0*3.14f) neko -= 2.0*3.14f;
 		+/
+
 
 
 	}
@@ -378,6 +320,9 @@ extern (C) void tick(){
 			case 2:
 				foreach(elem; chorodogs) elem.move(sequence);
 				break;
+			case 3:
+				foreach(elem; chorodogs) elem.move(sequence);
+				break;
 			default: break;
 		}
 
@@ -504,6 +449,10 @@ extern (C) void tick(){
 					}
 
 				}
+
+				break;
+
+			case 3:
 
 				break;
 

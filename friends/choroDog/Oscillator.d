@@ -6,7 +6,6 @@ import std.algorithm;
 import std.string;
 
 
-
 //2自由度系の振動子モデル
 class oscillator2{
 
@@ -19,10 +18,10 @@ class oscillator2{
 		float[][string] cosCoeffTheta;
 		float[][string] sinCoeffPhi;
 		float[][string] cosCoeffPhi;
-		float degree; //関数近似精度．sin, cosを何次の項まで計算するか．
+		int degree; //関数近似精度．sin, cosを何次の項まで計算するか．
 
 
-		this(float deg){
+		this(int deg){
 			degree = deg;
 		}
 
@@ -32,15 +31,16 @@ class oscillator2{
 
 			//初期値はランダム．分布はあとで変える．
 			for(int i=0; i<degree; i++){
-				sinCoeffTheta[name] ~= uniform(-1.0f, 1.0f, rnd);
-				cosCoeffTheta[name] ~= uniform(-1.0f, 1.0f, rnd);
-				sinCoeffPhi[name] ~= uniform(-1.0f, 1.0f, rnd);
-				cosCoeffPhi[name] ~= uniform(-1.0f, 1.0f, rnd);
+				sinCoeffTheta[name] ~= uniform(-100.0f, 100.0f, rnd);
+				cosCoeffTheta[name] ~= uniform(-100.0f, 100.0f, rnd);
+				sinCoeffPhi[name] ~= uniform(-100.0f, 100.0f, rnd);
+				cosCoeffPhi[name] ~= uniform(-100.0f, 100.0f, rnd);
 			}
 
-			omegaTheta[name] = uniform(-10.0f, 10.0f, rnd);
-			omegaPhi[name] = uniform(-10.0f, 10.0f, rnd);
+			omegaTheta[name] = uniform(-100.0f, 100.0f, rnd);
+			omegaPhi[name] = uniform(-100.0f, 100.0f, rnd);
 		}
+
 
 		//rehashすると最適化されるらしい．使いたかっただけ．
 		void rehash(){
@@ -71,6 +71,7 @@ class oscillator2{
 
 			foreach(string s, th; theta) deltaTheta[s] = omegaTheta[s];
 
+			/+
 			foreach(string s, me; theta){
 				for(int i=1; i<=degree; i++){
 					foreach(other; theta){
@@ -79,6 +80,9 @@ class oscillator2{
 					}
 				}
 			}
+
+			deltaTheta.rehash;
+			+/
 
 			return deltaTheta;
 		}
@@ -99,6 +103,8 @@ class oscillator2{
 					}
 				}
 			}
+
+			deltaPhi.rehash;
 
 			return deltaPhi;
 		}
