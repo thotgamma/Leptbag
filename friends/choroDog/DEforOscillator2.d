@@ -57,7 +57,9 @@ chorodog[] evolve(chorodog[] parents, float Cr, float F){
 						parents[k].gene.maxVelo[s].getx() + F * (parents[l].gene.maxVelo[s].getx() - parents[m].gene.maxVelo[s].getx()),
 						parents[k].gene.maxVelo[s].gety() + F * (parents[l].gene.maxVelo[s].gety() - parents[m].gene.maxVelo[s].gety()),
 						parents[k].gene.maxVelo[s].getz() + F * (parents[l].gene.maxVelo[s].getz() - parents[m].gene.maxVelo[s].getz()));
+			}
 
+			foreach(string s, th; child.gene.oscil.theta){
 				child.gene.oscil.theta[s] = parents[k].gene.oscil.theta[s] + F * (parents[l].gene.oscil.theta[s] - parents[m].gene.oscil.theta[s]);
 				child.gene.oscil.phi[s] = parents[k].gene.oscil.phi[s] + F * (parents[l].gene.oscil.phi[s] - parents[m].gene.oscil.phi[s]);
 				child.gene.oscil.omegaTheta[s] = parents[k].gene.oscil.omegaTheta[s] + F * (parents[l].gene.oscil.omegaTheta[s] - parents[m].gene.oscil.omegaTheta[s]);

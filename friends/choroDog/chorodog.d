@@ -18,7 +18,7 @@ Random rnd;
 int strategy = 3;
 
 string measuredPart = "head";
-int dogNum = 80;
+int dogNum = 50;
 int attackProbability = 30;
 float bodyMass = 42.592;
 
@@ -321,7 +321,8 @@ extern (C) void tick(){
 				foreach(elem; chorodogs) elem.move(sequence);
 				break;
 			case 3:
-				foreach(elem; chorodogs) elem.move(sequence);
+				if(!evaluation) foreach(elem; chorodogs) elem.move(sequence);
+				else foreach(elem; evaluateds) elem.move(sequence);
 				break;
 			default: break;
 		}
@@ -331,7 +332,7 @@ extern (C) void tick(){
 		time++;
 
 	//世代終わり
-	if(time == 30 + generation*2){
+	if(time == 100 + generation*3){
 
 
 		float proRecordTmp = topRecord;
@@ -452,7 +453,42 @@ extern (C) void tick(){
 
 				break;
 
+			//DE for Oscillator2
 			case 3:
+
+				if(!evaluation){
+
+					preRecords.length = chorodogs.length;
+					evaluateds.length = chorodogs.length;
+
+					foreach(int i, dog; chorodogs) preRecords[i] = dog.parts[measuredPart].getZpos();
+
+					//犬のリセット
+					foreach(int i, ref elem; chorodogs){
+						if(proRecordTmp>elem.parts[measuredPart].getZpos()) proRecordTmp = elem.parts[measuredPart].getZpos();
+						elem.despawn();
+					}
+					float ditherF = uniform(0.5f, 1.0f, rnd);
+					evaluateds = evolve(chorodogs, 0.9f, ditherF);
+					//foreach(int i, ref elem; evaluateds) elem.spawn(createVec3(to!float(i)*5.0f, 0.0f, 0.0f));
+					evaluation = true;
+
+				}else{
+					//犬のリセット
+					foreach(int i, ref elem; chorodogs){
+						if(proRecordTmp>evaluateds[i].parts[measuredPart].getZpos()) proRecordTmp = evaluateds[i].parts[measuredPart].getZpos();
+						if(evaluateds[i].parts[measuredPart].getZpos() <= preRecords[i]) elem.gene = evaluateds[i].gene;
+					}
+					foreach(int i, ref elem; evaluateds) elem.despawn();
+					foreach(int i, ref elem; chorodogs) elem.spawn(createVec3(to!float(i)*5.0f, 0.0f, 0.0f));
+					evaluation = false;
+				}
+
+				if(proRecordTmp<topRecord){
+					topRecord = proRecordTmp;
+					writeln("new record! : ", -1.0*topRecord);
+				}
+
 
 				break;
 

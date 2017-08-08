@@ -84,8 +84,8 @@ struct oscillator2Gene{
 
 		oscil.init(s);
 
-		angLimitUpper[s] = createVec3( uniform(0.0f, 1.40f, rnd), uniform(0.0f, 1.40f, rnd), uniform(0.0f, 1.40f, rnd) );
-		angLimitLower[s] = createVec3( uniform(0.0f, 1.40f, rnd), uniform(0.0f, 1.40f, rnd), uniform(0.0f, 1.40f, rnd) );
+		angLimitUpper[s] = createVec3( uniform(0.0f, 1.57f/2.0f, rnd), uniform(0.0f, 1.57f/2.0f, rnd), 0.0f );
+		angLimitLower[s] = createVec3( uniform(0.0f, 1.57f/2.0f, rnd), uniform(0.0f, 1.57f/2.0f, rnd), 0.0f );
 
 	}
 
