@@ -76,7 +76,7 @@ struct oscillator2Gene{
 
 	//関節間で共通するパラメータの初期化
 	void init(){
-		degree = uniform(1, 10, rnd);
+		degree = 5;
 		oscil = new oscillator2(degree);
 		friction = uniform(0.0f, 5.0f, rnd);
 	}
