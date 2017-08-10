@@ -10,19 +10,21 @@ import japariSDK.japarilib;
 import GA;
 import Oscillator;
 
+//身体パーツパラメータ
 struct partParam{
 
 	vertexManager vertices;
 	vec3 position;
 	vec3 scale;
 	quat rotation;
-	float mass;
-	float friction;
+	float mass; //総体重に対する百分率
+	float friction; //摩擦係数
 
 }
 
 
 
+//ヒンジパラメータ
 struct hingeParam{
 
 	string name;
@@ -41,6 +43,7 @@ struct hingeParam{
 
 }
 
+//g6dofパラメータ
 struct g6dofParam{
 
 	string name;
@@ -51,7 +54,7 @@ struct g6dofParam{
 	string object2Name;
 	vec3 object1Position;
 	vec3 object2Position;
-	bool[3] useAngLimit;
+	bool[3] useAngLimit; //(x, y, z) : ( 0, 1, 2 )
 	vec3 angLimitLower;
 	vec3 angLimitUpper;
 	bool[3] useLinLimit;
@@ -60,23 +63,26 @@ struct g6dofParam{
 
 }
 
+//遺伝させるパラメータ
 struct oscillator2Gene{
 
 	vec3[string] angLimitLower;
 	vec3[string] angLimitUpper;
 	float friction;
-	vec3[string] maxForce;
-	vec3[string] maxVelo;
-	oscillator2 oscil;
-	int degree;
+	vec3[string] maxForce; //最大出力．いくらmaxVeloを大きくしてもこれ以上の力では駆動しない．
+	vec3[string] maxVelo; //g6dofを動かす最高速
+	oscillator2 oscil; //振動子モデル．1個体に1つ．
+	int degree; //振動子モデルの近似精度(sin(nx), cos(nx)のn)
 
+	//関節間で共通するパラメータの初期化
 	void init(){
-		degree = 5;//uniform(1, 10, rnd);
+		degree = uniform(1, 10, rnd);
 		oscil = new oscillator2(degree);
-		friction = 0.8;//uniform(0.0f, 5.0f, rnd);
+		friction = uniform(0.0f, 5.0f, rnd);
 	}
 
 
+	//各関節で異なるパラメータの初期化
 	void init(string s){
 
 		maxForce[s] = createVec3( uniform(0.0f, 10.0f, rnd), uniform(0.0f, 10.0f, rnd), 0.0f );
@@ -96,6 +102,7 @@ struct oscillator2Gene{
 		maxVelo.rehash;
 	}
 
+	//表示関数．oscilのtoString()は実装してない．
 	void toString(){
 
 		write("angLimitLower : ");

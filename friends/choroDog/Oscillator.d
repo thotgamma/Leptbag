@@ -6,6 +6,7 @@ import std.algorithm;
 import std.string;
 
 
+
 //2自由度系の振動子モデル
 class oscillator2{
 
@@ -31,14 +32,14 @@ class oscillator2{
 
 			//初期値はランダム．分布はあとで変える．
 			for(int i=0; i<degree; i++){
-				sinCoeffTheta[name] ~= uniform(-10.0f, 10.0f, rnd);
-				cosCoeffTheta[name] ~= uniform(-10.0f, 10.0f, rnd);
-				sinCoeffPhi[name] ~= uniform(-10.0f, 10.0f, rnd);
-				cosCoeffPhi[name] ~= uniform(-10.0f, 10.0f, rnd);
+				sinCoeffTheta[name] ~= uniform(-20.0f, 20.0f, rnd);
+				cosCoeffTheta[name] ~= uniform(-20.0f, 20.0f, rnd);
+				sinCoeffPhi[name] ~= uniform(-20.0f, 20.0f, rnd);
+				cosCoeffPhi[name] ~= uniform(-20.0f, 20.0f, rnd);
 			}
 
-			omegaTheta[name] = uniform(-10.0f, 10.0f, rnd);
-			omegaPhi[name] = uniform(-10.0f, 10.0f, rnd);
+			omegaTheta[name] = uniform(-20.0f, 20.0f, rnd);
+			omegaPhi[name] = uniform(-20.0f, 20.0f, rnd);
 		}
 
 
@@ -58,20 +59,18 @@ class oscillator2{
 		void setTheta(string name, float th){
 			theta[name] = th;
 		}
-
 		void setPhi(string name, float ph){
 			phi[name] = ph;
 		}
 
 
-		//このdeltaThetaは必ずしも角度の微分を意味しない．単なる関数近似器として使う．
+		//このdeltaThetaは角度の微分を意味せず，単なるPI周期関数の値として使う．
 		float[string] calculateDeltaTheta(){
 
 			float[string] deltaTheta;
 
 			foreach(string s, th; theta) deltaTheta[s] = omegaTheta[s];
 
-			/+
 			foreach(string s, me; theta){
 				for(int i=1; i<=degree; i++){
 					foreach(other; theta){
@@ -82,13 +81,12 @@ class oscillator2{
 			}
 
 			deltaTheta.rehash;
-			+/
 
 			return deltaTheta;
 		}
 
 
-		//このdeltaPhiは必ずしも角度の微分を意味しない．単なる関数近似器として使う．
+		//このdeltaPhiは角度の微分を意味せず，単なるPI周期関数の値として使う．
 		float[string] calculateDeltaPhi(){
 
 			float[string] deltaPhi;

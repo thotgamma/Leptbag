@@ -18,19 +18,20 @@ Random rnd;
 const int strategy = 3;
 const int dogNum = 50;
 
-string measuredPart = "head";
-const int attackProbability = 30;
-const float bodyMass = 42.592;
+string measuredPart = "head"; //この名前のパーツの移動距離を測る
+const int attackProbability = 30; //simpleGAの突然変異確率
+const float bodyMass = 42.592; //動物の総体重．blender側では各パーツに百分率で質量を付与．
 
-chorodog[] chorodogs;
-chorodog[] evaluateds;
+chorodog[] chorodogs; //メイン
+chorodog[] evaluateds; //DEにおける突然変異個体
 
 elementManager[string] partsGenerator;
 
 
-partParam[string] partParams;
-hingeParam[string] hingeParams;
-g6dofParam[string] g6dofParams;
+//fpmからの読取用
+partParam[string] partParams; //身体パーツのパラメータ
+hingeParam[string] hingeParams; //ヒンジのパラメータ
+g6dofParam[string] g6dofParams; //g6dofのパラメータ
 
 
 
@@ -40,9 +41,9 @@ class chorodog{
 	elementNode[string] parts;
 	hingeConstraint[string] hinges;
 	generic6DofConstraint[string] g6dofs;
-	oscillator2Gene gene;
+	oscillator2Gene gene; //振動子モデル+DEにおける遺伝子
 
-	float[string][20] dna;
+	float[string][20] dna; //simpleGAにおける遺伝子
 
 	this(float x, float y, float z, bool initialDNA){
 
@@ -78,7 +79,6 @@ class chorodog{
 						param("mass",
 							//0.0f)));
 				partParams[s].mass * bodyMass)));
-			//gene.friction = partParams[s].friction;
 
 		}
 
@@ -119,12 +119,11 @@ class chorodog{
 			}
 
 
-			vec3 zeroVec3 = createVec3( 0.0, 0.0, 0.0 ); //セッターに同じvec3を入れるとロック
-
 			//for test
 			vec3 testVec3Low = createVec3( -1.57/2.0, -1.57/2.0, -1.57/2.0 );
 			vec3 testVec3Up = createVec3( 1.57/2.0, 1.57/2.0, 1.57/2.0 );
 
+			vec3 zeroVec3 = createVec3( 0.0, 0.0, 0.0 ); //セッターに同じvec3を入れるとロック
 
 			g6dofs[s].setAngularLimit( gene.angLimitLower[s], gene.angLimitUpper[s] );
 			g6dofs[s].setLinearLimit( zeroVec3, zeroVec3 );
@@ -144,13 +143,15 @@ class chorodog{
 	void move(int sequence){
 
 		if(g6dofs.length!=0) foreach(string s, dof; g6dofs){
-			gene.oscil.setTheta(s, dof.getAngle(0));
-			gene.oscil.setPhi(s, dof.getAngle(1));
+			gene.oscil.setTheta(s, dof.getAngle(0)); //thetaがx方向の関節移動
+			gene.oscil.setPhi(s, dof.getAngle(1)); //phiがz方向の関節移動
 		}
 
+		//theta, phiは角度ではなく，単に移動を行う度合いと考えてよい
 		float[string] deltaTheta = gene.oscil.calculateDeltaTheta();
 		float[string] deltaPhi = gene.oscil.calculateDeltaPhi();
 
+		//sinでdeltaTheta, deltaPhiを-1.0~1.0にリミットしている
 		foreach(string s, dof; g6dofs) dof.setRotationalTargetVelocity( createVec3(
 					gene.maxVelo[s].getx()*sin(deltaTheta[s]), gene.maxVelo[s].gety()*sin(deltaPhi[s]), 0.0f ) );
 
@@ -277,9 +278,13 @@ extern (C) void init(){
 		hingeParams = hingeParams.rehash;
 		g6dofParams = g6dofParams.rehash;
 
+
+
+		//chorodogs生成
 		chorodogs.length = dogNum;
 		foreach(int i, ref elem; chorodogs) elem = new chorodog(to!float(i)*5.0f, 0.0f, -1.0f, true);
 
+		//最初が0世代目
 		if(strategy!=0) writeln("start generation : 0");
 
 
@@ -296,14 +301,14 @@ extern (C) void init(){
 
 
 
-bool evaluation = false;
-float topRecord = 128.0;
+bool evaluation = false; //trueならDEの突然変異体評価フェイズ
+float topRecord = 128.0; //動物たちは-z方向に歩いていることに注意
 int timerDivisor = 0;
 int time = 0;
 int generation = 0;
 int sequence = 0;
-float[dogNum] preRecords;
-float[string][20][dogNum] preDNAs;
+float[dogNum] preRecords; //前回の移動距離を保存しておき，突然変異によってより大きく移動すれば突然変異体を採用
+float[string][20][dogNum] preDNAs; //for simple GA
 
 extern (C) void tick(){
 
@@ -313,17 +318,17 @@ extern (C) void tick(){
 		timerDivisor = 0;
 
 		switch(strategy){
-			case 0:
+			case 0: //学習なし
 				foreach(elem; chorodogs) elem.move(sequence);
 				break;
-			case 1:
+			case 1: //振動子モデルを使わないDE
 				if(!evaluation) foreach(elem; chorodogs) elem.move(sequence);
 				else foreach(elem; evaluateds) elem.move(sequence);
 				break;
-			case 2:
+			case 2: //simple GA
 				foreach(elem; chorodogs) elem.move(sequence);
 				break;
-			case 3:
+			case 3: //振動子モデル+DE
 				if(!evaluation) foreach(elem; chorodogs) elem.move(sequence);
 				else foreach(elem; evaluateds) elem.move(sequence);
 				break;
@@ -338,11 +343,12 @@ extern (C) void tick(){
 	if(time == 100 + generation*5){
 
 
-		float proRecordTmp = topRecord;
+		float proRecordTmp = 0.0; //この世代の最高移動距離
 
 		if(strategy!=0){
 
 			if(!evaluation){
+				//評価フェイズ
 				if(strategy==3) writeln("start evaluation : ", generation);
 			}else{
 				writeln("start generation : ", ++generation);
@@ -457,45 +463,61 @@ extern (C) void tick(){
 
 				break;
 
-			//DE for Oscillator2
+
+			//振動子モデル+DE
 			case 3:
 
-				if(!evaluation){
+				if(!evaluation){ //各の移動距離を測るフェイズ
+
+					//geneにはtoString()が(中途半端に)実装されている
 					//chorodogs[0].gene.toString();
 
 					foreach(int i, ref elem; chorodogs){
 
+						//移動距離を記録
 						preRecords[i] = elem.parts[measuredPart].getZpos();
+						//今回の最高記録
 						if(proRecordTmp>elem.parts[measuredPart].getZpos()) proRecordTmp = elem.parts[measuredPart].getZpos();
+						//chorodogは一旦退場
 						elem.despawn();
+
 					}
+					//DEに用いるパラメータ
 					float ditherF = uniform(0.5f, 1.0f, rnd);
-					if(generation==0){
+
+					if(generation==0){ //最初に評価用の犬たちevaluatedsをつくる
 						evaluateds.length = dogNum;
 						foreach(int i, ref elem; evaluateds) elem = new chorodog(to!float(i)*5.0f, 0.0f, -1.0f, true);
 					}else{
+						//突然変異
 						evolve(evaluateds, chorodogs, 0.9f, ditherF);
+						//evaluatedsをpop
 						foreach(int i, ref elem; evaluateds) elem.spawn(createVec3(to!float(i)*5.0f, 0.0f, 0.0f));
 					}
-					evaluation = true;
+					evaluation = true; //次は突然変異体評価フェイズ
 
-				}else{
+				}else{ //突然変異体評価フェイズ
 
 					//evaluateds[0].gene.toString();
+
 					foreach(int i, ref elem; evaluateds){
+						//今回の最高記録
 						if(evaluateds[i].parts[measuredPart].getZpos() < proRecordTmp){
 							proRecordTmp = evaluateds[i].parts[measuredPart].getZpos();
 						}
+						//もし突然変異した各個体が前回の同じindexの個体より良い性能なら採用
 						if(evaluateds[i].parts[measuredPart].getZpos() <= preRecords[i]){
 							chorodogs[i].gene = elem.gene;
 						}
 					}
+					//突然変異体は一旦退場
 					foreach(int i, ref elem; evaluateds) elem.despawn();
 					foreach(int i, ref elem; chorodogs) elem.spawn(createVec3(to!float(i)*5.0f, 0.0f, 0.0f));
-					evaluation = false;
+					evaluation = false; //次は採用した突然変異体を混ぜて性能評価
 
 				}
 
+				//最高記録を表示
 				if(proRecordTmp<topRecord){
 					topRecord = proRecordTmp;
 					writeln("new record! : ", -1.0*topRecord);
