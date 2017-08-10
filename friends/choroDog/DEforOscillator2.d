@@ -15,12 +15,9 @@ import params;
 Random rnd;
 
 
-chorodog[] evolve(chorodog[] parents, float Cr, float F){
+void evolve(chorodog[] children, chorodog[] parents, float Cr, float F){
 
 
-	chorodog[] children;
-	children.length = parents.length;
-	foreach(int i, ref child; children) child = new chorodog(to!float(i)*5.0f, 0.0f, 0.0f, true);
 
 	auto rnd = Random(unpredictableSeed);
 
@@ -87,5 +84,4 @@ chorodog[] evolve(chorodog[] parents, float Cr, float F){
 	}
 
 
-	return children;
 }

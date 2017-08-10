@@ -31,14 +31,14 @@ class oscillator2{
 
 			//初期値はランダム．分布はあとで変える．
 			for(int i=0; i<degree; i++){
-				sinCoeffTheta[name] ~= uniform(-100.0f, 100.0f, rnd);
-				cosCoeffTheta[name] ~= uniform(-100.0f, 100.0f, rnd);
-				sinCoeffPhi[name] ~= uniform(-100.0f, 100.0f, rnd);
-				cosCoeffPhi[name] ~= uniform(-100.0f, 100.0f, rnd);
+				sinCoeffTheta[name] ~= uniform(-10.0f, 10.0f, rnd);
+				cosCoeffTheta[name] ~= uniform(-10.0f, 10.0f, rnd);
+				sinCoeffPhi[name] ~= uniform(-10.0f, 10.0f, rnd);
+				cosCoeffPhi[name] ~= uniform(-10.0f, 10.0f, rnd);
 			}
 
-			omegaTheta[name] = uniform(-100.0f, 100.0f, rnd);
-			omegaPhi[name] = uniform(-100.0f, 100.0f, rnd);
+			omegaTheta[name] = uniform(-10.0f, 10.0f, rnd);
+			omegaPhi[name] = uniform(-10.0f, 10.0f, rnd);
 		}
 
 

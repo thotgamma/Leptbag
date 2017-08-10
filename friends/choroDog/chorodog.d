@@ -15,14 +15,15 @@ import params;
 Random rnd;
 
 //strategy 0:do not learn, 1:HingeDE, 2:simple GA, 3:6dofDE
-int strategy = 3;
+const int strategy = 3;
+const int dogNum = 50;
 
 string measuredPart = "head";
-int dogNum = 50;
-int attackProbability = 30;
-float bodyMass = 42.592;
+const int attackProbability = 30;
+const float bodyMass = 42.592;
 
 chorodog[] chorodogs;
+chorodog[] evaluateds;
 
 elementManager[string] partsGenerator;
 
@@ -59,38 +60,7 @@ class chorodog{
 			   }
 			 */
 
-			gene.init();
-			foreach(part; parts) part.setFriction(gene.friction);
 
-			foreach(string s, dof; g6dofs){
-
-				gene.init(s);
-
-
-				for(int i=0; i<3; i++){
-					if(g6dofParams[s].useAngLimit[i]) g6dofs[s].setRotationalMotor(i);
-					if(g6dofParams[s].useLinLimit[i]) g6dofs[s].setLinearMotor(i);
-				}
-
-
-				vec3 zeroVec3 = createVec3( 0.0, 0.0, 0.0 ); //セッターに同じvec3を入れるとロック
-
-				//for test
-				vec3 testVec3Low = createVec3( -1.57/2.0, -1.57/2.0, -1.57/2.0 );
-				vec3 testVec3Up = createVec3( 1.57/2.0, 1.57/2.0, 1.57/2.0 );
-
-
-				g6dofs[s].setAngularLimit( gene.angLimitLower[s], gene.angLimitUpper[s] );
-				g6dofs[s].setLinearLimit( zeroVec3, zeroVec3 );
-
-				//最大出力．index ; (x, y, z)=(0, 1, 2)(たぶん？)
-				g6dofs[s].setMaxRotationalMotorForce( 0, gene.maxForce[s].getx() );
-				g6dofs[s].setMaxRotationalMotorForce( 1, gene.maxForce[s].gety() );
-				g6dofs[s].setMaxRotationalMotorForce( 2, gene.maxForce[s].getz() );
-
-
-			}
-			gene.rehash();
 		}
 
 	}
@@ -129,13 +99,45 @@ class chorodog{
 			g6dofs[s] = generic6DofConstraint_create(parts[g6dofParams[s].object1Name], parts[g6dofParams[s].object2Name],
 					g6dofParams[s].object1Position, g6dofParams[s].object2Position,
 					g6dofParams[s].rotation);
-
-
 		}
 
 		parts = parts.rehash;
 		hinges = hinges.rehash;
 		g6dofs = g6dofs.rehash;
+
+		gene.init();
+		foreach(part; parts) part.setFriction(gene.friction);
+
+		foreach(string s, dof; g6dofs){
+
+			gene.init(s);
+
+
+			for(int i=0; i<3; i++){
+				if(g6dofParams[s].useAngLimit[i]) g6dofs[s].setRotationalMotor(i);
+				if(g6dofParams[s].useLinLimit[i]) g6dofs[s].setLinearMotor(i);
+			}
+
+
+			vec3 zeroVec3 = createVec3( 0.0, 0.0, 0.0 ); //セッターに同じvec3を入れるとロック
+
+			//for test
+			vec3 testVec3Low = createVec3( -1.57/2.0, -1.57/2.0, -1.57/2.0 );
+			vec3 testVec3Up = createVec3( 1.57/2.0, 1.57/2.0, 1.57/2.0 );
+
+
+			g6dofs[s].setAngularLimit( gene.angLimitLower[s], gene.angLimitUpper[s] );
+			g6dofs[s].setLinearLimit( zeroVec3, zeroVec3 );
+
+			//最大出力．index ; (x, y, z)=(0, 1, 2)(たぶん？)
+			g6dofs[s].setMaxRotationalMotorForce( 0, gene.maxForce[s].getx() );
+			g6dofs[s].setMaxRotationalMotorForce( 1, gene.maxForce[s].gety() );
+			g6dofs[s].setMaxRotationalMotorForce( 2, gene.maxForce[s].getz() );
+
+
+		}
+		gene.rehash();
+
 
 	}
 
@@ -202,7 +204,7 @@ extern (C) void init(){
 
 				partParams[name] = partParam();
 				partParams[name].position = createVec3(elem["xpos"].floating, elem["ypos"].floating, elem["zpos"].floating);
-				partParams[name].scale	= createVec3(elem["xscl"].floating, elem["yscl"].floating, elem["zscl"].floating);
+				partParams[name].scale = createVec3(elem["xscl"].floating, elem["yscl"].floating, elem["zscl"].floating);
 				partParams[name].rotation = createQuat(elem["wqat"].floating, elem["xqat"].floating, elem["yqat"].floating, elem["zqat"].floating);
 				partParams[name].mass = elem["mass"].floating;
 				partParams[name].friction = elem["friction"].floating;
@@ -216,7 +218,6 @@ extern (C) void init(){
 				}
 
 				partsGenerator[name] = createElementManager(partParams[name].vertices, &createConvexHullShapeBody);
-
 
 			}
 		}
@@ -275,9 +276,11 @@ extern (C) void init(){
 		partParams = partParams.rehash;
 		hingeParams = hingeParams.rehash;
 		g6dofParams = g6dofParams.rehash;
-		chorodogs.length = dogNum;
 
+		chorodogs.length = dogNum;
 		foreach(int i, ref elem; chorodogs) elem = new chorodog(to!float(i)*5.0f, 0.0f, -1.0f, true);
+
+		if(strategy!=0) writeln("start generation : 0");
 
 
 
@@ -299,11 +302,11 @@ int timerDivisor = 0;
 int time = 0;
 int generation = 0;
 int sequence = 0;
-float[] preRecords;
-float[string][20][] preDNAs;
-chorodog[] evaluateds;
+float[dogNum] preRecords;
+float[string][20][dogNum] preDNAs;
 
 extern (C) void tick(){
+
 
 	if(timerDivisor++ == 6){
 		sequence = (sequence+1)%20;
@@ -332,17 +335,22 @@ extern (C) void tick(){
 		time++;
 
 	//世代終わり
-	if(time == 100 + generation*3){
+	if(time == 100 + generation*5){
 
 
 		float proRecordTmp = topRecord;
 
-		if(!evaluation){
-			generation++;
-			writeln("end generation: " ~ to!string(generation));
-		}else{
-			writeln("end evaluating to generation: " ~ to!string(generation));
+		if(strategy!=0){
+
+			if(!evaluation){
+				if(strategy==3) writeln("start evaluation : ", generation);
+			}else{
+				writeln("start generation : ", ++generation);
+			}
+
+
 		}
+
 
 		time = 0;
 
@@ -355,10 +363,6 @@ extern (C) void tick(){
 			case 1:
 
 				if(!evaluation){
-
-					preRecords.length = chorodogs.length;
-					evaluateds.length = chorodogs.length;
-					preDNAs.length = chorodogs.length;
 
 					foreach(int i, dog; chorodogs){
 						preRecords[i] = dog.parts[measuredPart].getZpos();
@@ -457,31 +461,39 @@ extern (C) void tick(){
 			case 3:
 
 				if(!evaluation){
+					//chorodogs[0].gene.toString();
 
-					preRecords.length = chorodogs.length;
-					evaluateds.length = chorodogs.length;
-
-					foreach(int i, dog; chorodogs) preRecords[i] = dog.parts[measuredPart].getZpos();
-
-					//犬のリセット
 					foreach(int i, ref elem; chorodogs){
+
+						preRecords[i] = elem.parts[measuredPart].getZpos();
 						if(proRecordTmp>elem.parts[measuredPart].getZpos()) proRecordTmp = elem.parts[measuredPart].getZpos();
 						elem.despawn();
 					}
 					float ditherF = uniform(0.5f, 1.0f, rnd);
-					evaluateds = evolve(chorodogs, 0.9f, ditherF);
-					//foreach(int i, ref elem; evaluateds) elem.spawn(createVec3(to!float(i)*5.0f, 0.0f, 0.0f));
+					if(generation==0){
+						evaluateds.length = dogNum;
+						foreach(int i, ref elem; evaluateds) elem = new chorodog(to!float(i)*5.0f, 0.0f, -1.0f, true);
+					}else{
+						evolve(evaluateds, chorodogs, 0.9f, ditherF);
+						foreach(int i, ref elem; evaluateds) elem.spawn(createVec3(to!float(i)*5.0f, 0.0f, 0.0f));
+					}
 					evaluation = true;
 
 				}else{
-					//犬のリセット
-					foreach(int i, ref elem; chorodogs){
-						if(proRecordTmp>evaluateds[i].parts[measuredPart].getZpos()) proRecordTmp = evaluateds[i].parts[measuredPart].getZpos();
-						if(evaluateds[i].parts[measuredPart].getZpos() <= preRecords[i]) elem.gene = evaluateds[i].gene;
+
+					//evaluateds[0].gene.toString();
+					foreach(int i, ref elem; evaluateds){
+						if(evaluateds[i].parts[measuredPart].getZpos() < proRecordTmp){
+							proRecordTmp = evaluateds[i].parts[measuredPart].getZpos();
+						}
+						if(evaluateds[i].parts[measuredPart].getZpos() <= preRecords[i]){
+							chorodogs[i].gene = elem.gene;
+						}
 					}
 					foreach(int i, ref elem; evaluateds) elem.despawn();
 					foreach(int i, ref elem; chorodogs) elem.spawn(createVec3(to!float(i)*5.0f, 0.0f, 0.0f));
 					evaluation = false;
+
 				}
 
 				if(proRecordTmp<topRecord){
