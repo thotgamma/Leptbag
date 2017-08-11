@@ -7,7 +7,6 @@ import std.conv;
 import std.algorithm;
 
 import japariSDK.japarilib;
-import GA;
 import Oscillator;
 
 Random rnd;
