@@ -1,3 +1,4 @@
+import core.runtime;
 import std.stdio;
 import std.math;
 import std.json;
@@ -6,107 +7,153 @@ import std.conv;
 import std.algorithm;
 
 import japariSDK.japarilib;
-import lowPolyFox_6dof_DE;
 import DEforOscillator2;
 import Oscillator;
 import params;
+import loadJson;
 
 Random rnd;
 
+const int agentNum = 100;
+const int moveSpan = 12;
 
-//Differential Evolution
-void evolve(chorodog[] children, chorodog[] parents, float Cr, float F){
+string measuredPart = "head"; //この名前のパーツの移動距離を測る
+const float bodyMass = 5.0f; //動物の総体重．blender側では各パーツに百分率で質量を付与．
+
+agent[] agents; //メイン
+agent[] evaluateds; //DEにおける突然変異個体
+
+/*
+elementManager[string] partsGenerator;
 
 
-	auto rnd = Random(unpredictableSeed);
+//fpmからの読取用
+partParam[string] partParams; //身体パーツのパラメータ
+hingeParam[string] hingeParams; //ヒンジのパラメータ
+g6dofParam[string] g6dofParams; //g6dofのパラメータ
+*/
 
 
-	//交雑
-	foreach(int j, child; children){
+
+class agent{
+
+	elementNode[string] parts;
+	hingeConstraint[string] hinges;
+	generic6DofConstraint[string] g6dofs;
+	oscillator2Gene gene; //振動子モデル+DEにおける遺伝子
+	agentBodyParameter bodyInfomation;
 
 
-		//ランダムに3個体を選ぶ．
-		//そのパラメータ全体(Oscillator2Gene)をベクトルとしてみる．
-		//3つのうち1つのベクトルに，ほか2つのベクトルの差分*Fを加えたベクトルを生成する
-		//確率Crでそのベクトルの各成分を採用する
-		uint k, l, m;
-		k = uniform(0, to!int(parents.length), rnd);
-		l = uniform(0, to!int(parents.length), rnd);
-		m = uniform(0, to!int(parents.length), rnd);
+	this(float x, float y, float z, agentBodyParameter info){
 
-		//以下，ベクトル生成
+		spawn(createVec3(x, y, z), info);
 
-		if(Cr < uniform(0.0f, 1.0f, rnd)) child.gene.friction = parents[k].gene.friction + F * (parents[l].gene.friction - parents[m].gene.friction);
-		else child.gene.friction = parents[j].gene.friction;
+	}
 
-		if(Cr < uniform(0.0f, 1.0f, rnd)) child.gene.degree = to!int(to!float(parents[k].gene.degree) + F * to!float(parents[l].gene.degree - parents[m].gene.degree) );
-		else child.gene.degree = parents[j].gene.degree;
+	void spawn(vec3 position, agentBodyParameter info){
 
-		foreach( string s, elem; child.gene.angLimitLower ){
+		this.bodyInfomation = info;
 
-			if(Cr < uniform(0.0f, 1.0f, rnd)) child.gene.angLimitLower[s] = createVec3(
-					parents[k].gene.angLimitLower[s].getx() + F * (parents[l].gene.angLimitLower[s].getx() - parents[m].gene.angLimitLower[s].getx()),
-					parents[k].gene.angLimitLower[s].gety() + F * (parents[l].gene.angLimitLower[s].gety() - parents[m].gene.angLimitLower[s].gety()),
-					parents[k].gene.angLimitLower[s].getz() + F * (parents[l].gene.angLimitLower[s].getz() - parents[m].gene.angLimitLower[s].getz()));
-			else child.gene.angLimitLower[s] = parents[j].gene.angLimitLower[s];
-
-			if(Cr < uniform(0.0f, 1.0f, rnd)) child.gene.angLimitUpper[s] = createVec3(
-					parents[k].gene.angLimitUpper[s].getx() + F * (parents[l].gene.angLimitUpper[s].getx() - parents[m].gene.angLimitUpper[s].getx()),
-					parents[k].gene.angLimitUpper[s].gety() + F * (parents[l].gene.angLimitUpper[s].gety() - parents[m].gene.angLimitUpper[s].gety()),
-					parents[k].gene.angLimitUpper[s].getz() + F * (parents[l].gene.angLimitUpper[s].getz() - parents[m].gene.angLimitUpper[s].getz()));
-			else child.gene.angLimitUpper[s] = parents[j].gene.angLimitUpper[s];
-
-			if(Cr < uniform(0.0f, 1.0f, rnd)) child.gene.maxForce[s] = createVec3(
-					parents[k].gene.maxForce[s].getx() + F * (parents[l].gene.maxForce[s].getx() - parents[m].gene.maxForce[s].getx()),
-					parents[k].gene.maxForce[s].gety() + F * (parents[l].gene.maxForce[s].gety() - parents[m].gene.maxForce[s].gety()),
-					parents[k].gene.maxForce[s].getz() + F * (parents[l].gene.maxForce[s].getz() - parents[m].gene.maxForce[s].getz()));
-			else child.gene.maxForce[s] = parents[j].gene.maxForce[s];
-
-			if(Cr < uniform(0.0f, 1.0f, rnd)) child.gene.maxVelo[s] = createVec3(
-					parents[k].gene.maxVelo[s].getx() + F * (parents[l].gene.maxVelo[s].getx() - parents[m].gene.maxVelo[s].getx()),
-					parents[k].gene.maxVelo[s].gety() + F * (parents[l].gene.maxVelo[s].gety() - parents[m].gene.maxVelo[s].gety()),
-					parents[k].gene.maxVelo[s].getz() + F * (parents[l].gene.maxVelo[s].getz() - parents[m].gene.maxVelo[s].getz()));
-			else child.gene.maxVelo[s] = parents[j].gene.maxVelo[s];
-		}
-
-		foreach(string s, th; child.gene.oscil.theta){
-
-			if(Cr < uniform(0.0f, 1.0f, rnd)) child.gene.oscil.omegaTheta[s] = parents[k].gene.oscil.omegaTheta[s] + F * (parents[l].gene.oscil.omegaTheta[s] - parents[m].gene.oscil.omegaTheta[s]);
-			else child.gene.oscil.omegaTheta[s] = parents[j].gene.oscil.omegaTheta[s];
-
-			if(Cr < uniform(0.0f, 1.0f, rnd)) child.gene.oscil.omegaPhi[s] = parents[k].gene.oscil.omegaPhi[s] + F * (parents[l].gene.oscil.omegaPhi[s] - parents[m].gene.oscil.omegaPhi[s]);
-			else child.gene.oscil.omegaPhi[s] = parents[j].gene.oscil.omegaPhi[s];
-
-			for(int i=0; i<parents[k].gene.oscil.sinCoeffTheta[s].length; i++){
-
-				if(Cr < uniform(0.0f, 1.0f, rnd)) 
-					child.gene.oscil.sinCoeffTheta[s][i] = parents[k].gene.oscil.sinCoeffTheta[s][i] + F * (parents[l].gene.oscil.sinCoeffTheta[s][i] + parents[m].gene.oscil.sinCoeffTheta[s][i]);
-				else child.gene.oscil.sinCoeffTheta[s][i] = parents[j].gene.oscil.sinCoeffTheta[s][i];
-
-			}
-
-			for(int i=0; i<parents[k].gene.oscil.cosCoeffTheta[s].length; i++){
-				if(Cr < uniform(0.0f, 1.0f, rnd)) 
-					child.gene.oscil.cosCoeffTheta[s][i] = parents[k].gene.oscil.cosCoeffTheta[s][i] + F * (parents[l].gene.oscil.cosCoeffTheta[s][i] + parents[m].gene.oscil.cosCoeffTheta[s][i]);
-				else child.gene.oscil.cosCoeffTheta[s][i] = parents[j].gene.oscil.cosCoeffTheta[s][i];
-			}
-
-			for(int i=0; i<parents[k].gene.oscil.sinCoeffPhi[s].length; i++){
-				if(Cr < uniform(0.0f, 1.0f, rnd)) 
-					child.gene.oscil.sinCoeffPhi[s][i] = parents[k].gene.oscil.sinCoeffPhi[s][i] + F * (parents[l].gene.oscil.sinCoeffPhi[s][i] + parents[m].gene.oscil.sinCoeffPhi[s][i]);
-				else child.gene.oscil.sinCoeffPhi[s][i] = parents[j].gene.oscil.sinCoeffPhi[s][i];
-			}
-
-			for(int i=0; i<parents[k].gene.oscil.cosCoeffPhi[s].length; i++){
-				if(Cr < uniform(0.0f, 1.0f, rnd)) 
-					child.gene.oscil.cosCoeffPhi[s][i] = parents[k].gene.oscil.cosCoeffPhi[s][i] + F * (parents[l].gene.oscil.cosCoeffPhi[s][i] + parents[m].gene.oscil.cosCoeffPhi[s][i]);
-				else child.gene.oscil.cosCoeffPhi[s][i] = parents[j].gene.oscil.cosCoeffPhi[s][i];
-			}
-
+		foreach(string name, params;bodyInfomation.partParams){
+				bodyInfomation.partsGenerator[name] = createElementManager(bodyInfomation.partParams[name].vertices, &createConvexHullShapeBody);
 		}
 
 
+		foreach(string s, partsGen; bodyInfomation.partsGenerator){
 
+			parts[s] = partsGen.generate(paramWrap(
+						param("position", addVec(bodyInfomation.partParams[s].position, position)),
+						param("scale",    bodyInfomation.partParams[s].scale),
+						param("rotation", bodyInfomation.partParams[s].rotation),
+						param("model",    bodyInfomation.partParams[s].vertices),
+						param("mass",
+							//0.0f)));
+				bodyInfomation.partParams[s].mass * bodyMass)));
+
+		}
+
+		//ヒンジ
+		foreach(string s, param; bodyInfomation.hingeParams){
+			hinges[s] = hingeConstraint_create(parts[bodyInfomation.hingeParams[s].object1Name], parts[bodyInfomation.hingeParams[s].object2Name],
+					bodyInfomation.hingeParams[s].object1Position, bodyInfomation.hingeParams[s].object2Position,
+					bodyInfomation.hingeParams[s].axis1, bodyInfomation.hingeParams[s].axis2);
+			hinges[s].setLimit( bodyInfomation.hingeParams[s].limitLower, bodyInfomation.hingeParams[s].limitLower );
+			if( bodyInfomation.hingeParams[s].enabled ){
+				hinges[s].enableMotor(true);
+				hinges[s].setMaxMotorImpulse(5);
+			}
+		}
+
+		//6Dof
+		foreach(string s, param; bodyInfomation.g6dofParams){
+			g6dofs[s] = generic6DofConstraint_create(parts[bodyInfomation.g6dofParams[s].object1Name], parts[bodyInfomation.g6dofParams[s].object2Name],
+					bodyInfomation.g6dofParams[s].object1Position, bodyInfomation.g6dofParams[s].object2Position,
+					bodyInfomation.g6dofParams[s].rotation);
+		}
+
+		parts = parts.rehash;
+		hinges = hinges.rehash;
+		g6dofs = g6dofs.rehash;
+
+
+		gene.init();
+		foreach(part; parts) part.setFriction(gene.friction);
+
+		foreach(string s, dof; g6dofs){
+
+			gene.init(s);
+
+			for(int i=0; i<3; i++){
+				if(bodyInfomation.g6dofParams[s].useAngLimit[i]) g6dofs[s].setRotationalMotor(i);
+				if(bodyInfomation.g6dofParams[s].useLinLimit[i]) g6dofs[s].setLinearMotor(i);
+			}
+
+
+			//for test
+			vec3 testVec3Low = createVec3( -1.57/2.0, -1.57/2.0, -1.57/2.0 );
+			vec3 testVec3Up = createVec3( 1.57/2.0, 1.57/2.0, 1.57/2.0 );
+
+			vec3 zeroVec3 = createVec3( 0.0, 0.0, 0.0 ); //セッターに同じvec3を入れるとロック
+
+			g6dofs[s].setAngularLimit( gene.angLimitLower[s], gene.angLimitUpper[s] );
+			g6dofs[s].setLinearLimit( zeroVec3, zeroVec3 );
+
+			//最大出力．index ; (x, y, z)=(0, 1, 2)(たぶん？)
+			g6dofs[s].setMaxRotationalMotorForce( 0, gene.maxForce[s].getx() );
+			g6dofs[s].setMaxRotationalMotorForce( 1, gene.maxForce[s].gety() );
+			g6dofs[s].setMaxRotationalMotorForce( 2, gene.maxForce[s].getz() );
+
+
+		}
+		gene.rehash();
+
+
+	}
+
+
+	void move(){
+
+		//oscilは現在角度から次の駆動力を決定する
+		if(g6dofs.length!=0) foreach(string s, dof; g6dofs){
+			gene.oscil.setTheta(s, dof.getAngle(0)); //thetaがx方向の関節移動
+			gene.oscil.setPhi(s, dof.getAngle(1)); //phiがz方向の関節移動
+		}
+
+		//theta, phiは角度ではなく，単に駆動力の度合いと考えてよい
+		float[string] deltaTheta = gene.oscil.calculateDeltaTheta();
+		float[string] deltaPhi = gene.oscil.calculateDeltaPhi();
+
+		//sinでdeltaTheta, deltaPhiを-1.0~1.0にリミットしている
+		foreach(string s, dof; g6dofs) dof.setRotationalTargetVelocity( createVec3(
+					gene.maxVelo[s].getx()*sin(deltaTheta[s]), gene.maxVelo[s].gety()*sin(deltaPhi[s]), 0.0f ) );
+
+	}
+
+
+	void despawn(){
+		foreach(part; parts) part.destroy();
+		foreach(hinge; hinges) hinge.destroy();
+		foreach(dofs; g6dofs) dofs.destroy();
 	}
 
 

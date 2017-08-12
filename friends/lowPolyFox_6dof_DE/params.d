@@ -11,6 +11,13 @@ import Oscillator;
 
 Random rnd;
 
+struct agentBodyParameter{
+	elementManager[string] partsGenerator;
+	partParam[string] partParams; //身体パーツのパラメータ
+	hingeParam[string] hingeParams; //ヒンジのパラメータ
+	g6dofParam[string] g6dofParams; //g6dofのパラメータ
+}
+
 //身体パーツパラメータ
 struct partParam{
 

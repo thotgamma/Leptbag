@@ -6,6 +6,7 @@ import std.conv;
 import std.algorithm;
 
 import japariSDK.japarilib;
+import agent;
 import lowPolyFox_6dof_DE;
 import DEforOscillator2;
 import Oscillator;
