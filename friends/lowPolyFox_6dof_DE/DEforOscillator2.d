@@ -121,7 +121,7 @@ void evolveBest(agent[] children, agent[] parents, float Cr, float F, int[] best
 	auto rnd = Random(unpredictableSeed);
 
 
-	//交雑
+	//agentのgeneに含まれるパラメータを交雑
 	foreach(int j, child; children){
 
 
@@ -130,9 +130,9 @@ void evolveBest(agent[] children, agent[] parents, float Cr, float F, int[] best
 		//3つのうち1つのベクトルに，ほか2つのベクトルの差分*Fを加えたベクトルを生成する
 		//確率Crでそのベクトルの各成分を採用する
 		uint k, l, m;
-		k = bests[0];//uniform(0, to!int(parents.length), rnd);
-		l = bests[1];//uniform(0, to!int(parents.length), rnd);
-		m = bests[2];//uniform(0, to!int(parents.length), rnd);
+		k = bests[0];
+		l = bests[1];
+		m = bests[2];
 
 		//以下，ベクトル生成
 

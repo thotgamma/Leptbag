@@ -16,7 +16,6 @@ import loadJson;
 Random rnd;
 
 const int agentNum = 100;
-const int moveSpan = 12;
 
 string measuredPart = "head"; //この名前のパーツの移動距離を測る
 const float bodyMass = 5.0f; //動物の総体重．blender側では各パーツに百分率で質量を付与．
@@ -26,102 +25,98 @@ agent[] evaluateds; //DEにおける突然変異個体
 agentBodyParameter info;
 
 /*
-elementManager[string] partsGenerator;
+   elementManager[string] partsGenerator;
 
 
 //fpmからの読取用
 partParam[string] partParams; //身体パーツのパラメータ
 hingeParam[string] hingeParams; //ヒンジのパラメータ
 g6dofParam[string] g6dofParams; //g6dofのパラメータ
-*/
+ */
 
 
 
 //ApplicationInterface----------------------
 
+
+//initialize--------------------------------
+
 extern (C) void init(){
-		rt_init();
-		Random(unpredictableSeed);
-		writeln("lowPolyFox_6dof_DE.d loaded");
+	rt_init();
+	Random(unpredictableSeed);
+	writeln("lowPolyFox_6dof_DE.d loaded");
 
 
-		//jsonからload
-		loadMesh(info.partParams);
-		loadHinge(info.hingeParams);
-		loadG6dof(info.g6dofParams);
+	//jsonからload
+	loadMesh(info.partParams);
+	loadHinge(info.hingeParams);
+	loadG6dof(info.g6dofParams);
 
 
-		info.partParams = info.partParams.rehash;
-		info.hingeParams = info.hingeParams.rehash;
-		info.g6dofParams = info.g6dofParams.rehash;
+	info.partParams = info.partParams.rehash;
+	info.hingeParams = info.hingeParams.rehash;
+	info.g6dofParams = info.g6dofParams.rehash;
 
 
-		//agents生成
-		agents.length = agentNum;
-		foreach(int i, ref elem; agents){
-			elem = new agent(to!float(i)*5.0f, 0.0f, -1.0f, info);
-		}
+	//agents生成
+	agents.length = agentNum;
+	foreach(int i, ref elem; agents){
+		elem = new agent(to!float(i)*5.0f, 0.0f, -1.0f, info);
+	}
 
-		//最初が0世代目
-		writeln("start generation : 0");
+	//最初が0世代目
+	writeln("start generation : 0");
 
 }
 
 
 
-//マイステップ実行されるべき動作----------------------------
+//マイステップ実行される--------------------
 
-bool evaluation = false; //trueならDEの突然変異体評価フェイズ
-float topRecord = 0.0f; //動物たちは-z方向に歩いていることに注意
-float averageRecord = 0.0f; //毎世代ごとの平均到達距離表示用
-int timerDivisor = 0;
+
+float topScore = 0.0f; //動物たちは-z方向に歩いていることに注意
+float averageScore = 0.0f; //毎世代ごとの平均到達距離表示用
+
+//そのステップ内で行うべき処理を決定するための変数
 int time = 0; //時計
+int timerDivisor = 0; //定期的に実行する処理のためのカウンタ
+const int moveSpan = 12; //timerDivisorがこの値になるごとに上記処理実行
+const int trialSpan = 100; //一試行の長さ
+const int generationStroke = 5; //一世代毎にgenerationStrokeだけ試行を長く行うようになる
+bool evaluation = false; //trueならDEの突然変異体評価フェイズ
 int generation = 0; //世代を記録する
-float[agentNum] preRecords; //前回の移動距離を保存しておき，突然変異によってより大きく移動すれば突然変異体を採用
-float[agentNum] evaluatedsRecords;
 
-int averageOf = 5; //一世代5回の試行を行いその平均をスコアとする
-int trial = 0;
-float score = 0.0f;
+float[agentNum] preScores; //突然変異によってより大きく移動すれば突然変異体を採用
+float[agentNum] evaluatedsScores; //突然変異群のスコアを管理
+
+int averageOf = 5; //一世代averageOf回の試行を行いその平均をスコアとする
+int trial = 0; //試行のカウンタ
+
 
 extern (C) void tick(){
 
-
-	if(timerDivisor++ == moveSpan){
-		timerDivisor = 0;
-		if(!evaluation) foreach(elem; agents) elem.move();
-		else foreach(elem; evaluateds) elem.move();
-	}
 	time++;
 
+	//定期的に実行する処理
+	if(timerDivisor++ == moveSpan){
+		if(!evaluation) foreach(elem; agents) elem.move();
+		else foreach(elem; evaluateds) elem.move();
 
-	//世代終わり
-	if(time == (200 + generation*5)){
-
-
-		float proRecordTmp = 0.0; //この世代の最高移動距離
-
-
-		if(trial==averageOf){
-			if(!evaluation){
-				//評価フェイズ
-				writeln("	start evaluation : ", generation);
-			}else{
-				writeln("start generation : ", ++generation);
-			}
-			trial = 0;
-		}else{
-			writeln("trial at : ", trial);
-		}
+		timerDivisor = 0;
+	}
 
 
 
+	//一試行が終わるたびに実行する処理
+	if(time == (trialSpan + generation*generationStroke)){
 
 		time = 0;
-		trial++;
+		writeln("		trial at : ", trial++, "\n");
 
+		float proScoreTmp = 0.0f; //この世代の最高移動距離
+		averageScore = 0.0f;
 
-		if(!evaluation){ //各の移動距離を測るフェイズ
+		if(!evaluation){ //各個体の移動距離を測るフェイズ
 
 			//geneにはtoString()が(中途半端に)実装されている
 			//agents[0].gene.toString();
@@ -129,55 +124,15 @@ extern (C) void tick(){
 			foreach(int i, ref elem; agents){
 
 				//移動距離を記録
-				preRecords[i] += elem.parts[measuredPart].getZpos();
-				averageRecord += elem.parts[measuredPart].getZpos();
+				preScores[i] += elem.parts[measuredPart].getZpos();
+				averageScore += elem.parts[measuredPart].getZpos();
 
-				//今回の最高記録
-				if(proRecordTmp>elem.parts[measuredPart].getZpos()){
-					proRecordTmp = elem.parts[measuredPart].getZpos();
-				}
+				//今回の最高記録(-z方向が前)
+				proScoreTmp = min( elem.parts[measuredPart].getZpos(), proScoreTmp );
 
+				//初期位置に戻る
 				elem.despawn();
 				elem.spawn(createVec3(to!float(i)*5.0f, 0.0f, 0.0f), info);
-
-			}
-
-			//trial回の試行を終えたのでフェイズ移行
-			if(trial==averageOf){
-
-				//最良3個体を記録
-				int[] bests = [ 0, 0, 0 ];
-				//最良スコア
-				float topScore = 0.0f;
-				foreach(int i, ref elem ;agents){
-
-					//agentは一旦退場
-					elem.despawn();
-
-					if(preRecords[i]<topScore){
-						bests[2] = bests[1];
-						bests[1] = bests[0];
-						bests[0] = i;
-					}
-
-				}
-
-
-				if(generation==0){ //最初に評価用の犬たちevaluatedsをつくる
-					evaluateds.length = agentNum;
-					foreach(int i, ref elem; evaluateds) elem = new agent(to!float(i)*5.0f, 0.0f, -1.0f, info);
-				}else{ //0世代以降は突然変異を行う
-
-					//DEに用いるパラメータ
-					float ditherF = uniform(0.5f, 1.0f, rnd);
-					//突然変異
-					evolveBest(evaluateds, agents, 0.9f, ditherF, bests);
-
-					//evaluatedsをpop
-					foreach(int i, ref elem; evaluateds) elem.spawn(createVec3(to!float(i)*5.0f, 0.0f, 0.0f), info);
-
-				}
-				evaluation = true; //次は突然変異体評価フェイズ
 
 			}
 
@@ -187,58 +142,113 @@ extern (C) void tick(){
 
 			foreach(int i, ref elem; evaluateds){
 
-				evaluatedsRecords[i] += elem.parts[measuredPart].getZpos();
-				averageRecord += elem.parts[measuredPart].getZpos();
-				//今回の最高記録
-				if(evaluateds[i].parts[measuredPart].getZpos() < proRecordTmp){
-					proRecordTmp = evaluateds[i].parts[measuredPart].getZpos();
-				}
+				evaluatedsScores[i] += elem.parts[measuredPart].getZpos();
+				averageScore += elem.parts[measuredPart].getZpos();
 
+				//今回の最高記録
+				proScoreTmp = min( evaluateds[i].parts[measuredPart].getZpos(), proScoreTmp );
+
+				//初期位置に戻る
 				elem.despawn();
 				elem.spawn(createVec3(to!float(i)*5.0f, 0.0f, 0.0f), info);
 
 			}
 
-			if(trial==averageOf){
-
-				foreach(int i, ref elem; evaluateds){
-					//もし突然変異した各個体が前回の同じindexの個体より良い性能なら採用
-					if(evaluatedsRecords[i] <= preRecords[i]){
-						agents[i].gene = elem.gene;
-					}
-					preRecords[i] = 0.0f;
-					evaluatedsRecords[i] = 0.0f;
-
-				}
-				//突然変異体は一旦退場
-				foreach(int i, ref elem; evaluateds) elem.despawn();
-				foreach(int i, ref elem; agents) elem.spawn(createVec3(to!float(i)*5.0f, 0.0f, 0.0f), info);
-				evaluation = false; //次は採用した突然変異体を混ぜて性能評価
-
-			}
-
 		}
 
-		//最高記録を表示
-		if(proRecordTmp<topRecord){
-			topRecord = proRecordTmp;
-			writeln("\n		new record! : ", -1.0*topRecord);
+
+		//最高記録が出たら記録，表示
+		if(proScoreTmp<topScore){
+			topScore = proScoreTmp;
+			writeln("\n		top score ever! : ", -1.0f*topScore);
 		}
 
-		//今世代の最高記録
-		writeln("		top achievement : ", -1.0f*proRecordTmp);
+		//今回の試行の最高記録
+		writeln("		top score of this trial : ", -1.0f*proScoreTmp);
 
-		//今世代の平均移動距離を表示
-		writeln("		agerage achievement : ", -1.0f*averageRecord/to!float(agentNum));
-		averageRecord = 0.0f;
-
-
-
-
+		//今試行の平均移動距離を表示
+		writeln("		agerage score : ", -1.0f*averageScore/to!float(agentNum));
+		averageScore = 0.0f;
 
 
 	}
 
+
+	//試行がaverageOf回行われるたびに実行される処理
+	if(trial==averageOf){
+
+		trial = 0;
+
+		if(!evaluation){ //評価フェイズ
+			writeln("	start evaluation : ", generation);
+		}else{
+			writeln("start generation : ", ++generation);
+		}
+
+
+		if(!evaluation){ //各個体の移動距離を測るフェイズ
+
+
+			//最良3個体を記録
+			int[] bests = [ 0, 0, 0 ];
+			//最良スコア
+			float topScore = 0.0f;
+			foreach(int i, ref elem ;agents){
+
+				//agentは一旦退場
+				elem.despawn();
+
+				if(preScores[i]<topScore){
+					bests[2] = bests[1];
+					bests[1] = bests[0];
+					bests[0] = i;
+				}
+
+			}
+
+
+			if(generation==0){ //最初に評価用の犬たちevaluatedsをつくる
+				evaluateds.length = agentNum;
+				foreach(int i, ref elem; evaluateds) elem = new agent(to!float(i)*5.0f, 0.0f, 0.0f, info);
+			}else{ //0世代以降は突然変異を行う
+
+				//DEに用いるパラメータ
+				float ditherF = uniform(0.5f, 1.0f, rnd);
+				//突然変異
+				evolveBest(evaluateds, agents, 0.9f, ditherF, bests);
+
+				//evaluatedsをpop
+				foreach(int i, ref elem; evaluateds) elem.spawn(createVec3(to!float(i)*5.0f, 0.0f, 0.0f), info);
+
+			}
+
+			evaluation = true; //次は突然変異体評価フェイズ
+
+
+		}else{ //突然変異体評価フェイズ
+
+			foreach(int i, ref elem; evaluateds){
+
+				//もし突然変異した各個体が前回の同じindexの個体より良い性能なら採用
+				if(evaluatedsScores[i] <= preScores[i]) agents[i].gene = elem.gene;
+
+				//スコアリセット
+				preScores[i] = 0.0f;
+				evaluatedsScores[i] = 0.0f;
+
+			}
+
+			//突然変異体は一旦退場
+			foreach(int i, ref elem; evaluateds) elem.despawn();
+			foreach(int i, ref elem; agents) elem.spawn(createVec3(to!float(i)*5.0f, 0.0f, 0.0f), info);
+
+			evaluation = false; //次は採用した突然変異体を混ぜて性能評価
+
+		}
+
+
+
+	}
 
 
 
