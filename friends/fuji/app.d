@@ -36,7 +36,7 @@ agentBodyParameter info;
 extern (C) void init(){
 	rt_init();
 	Random(unpredictableSeed);
-	writeln("lowPolyFox_6dof_DE.d loaded");
+	writeln("model:fuji loaded");
 
 
 	//jsonからload
