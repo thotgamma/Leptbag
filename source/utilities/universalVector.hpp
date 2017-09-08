@@ -16,6 +16,7 @@
 class vec3{
 
 	public:
+	static int count;
 	virtual float getx();
 	virtual float gety();
 	virtual float getz();
@@ -26,6 +27,8 @@ class vec3{
 
 	vec3();
 	vec3(float x, float y, float z);
+	vec3(const vec3& rhs);
+	virtual ~vec3();
 
 	btVector3 toBullet();
 	glm::vec3 toGlm();
@@ -43,7 +46,7 @@ extern "C" vec3* createVec3(float x, float y, float z);
 class quat{
 
 	public:
-
+	static int count;
 	float w;
 	float x;
 	float y;
@@ -51,6 +54,8 @@ class quat{
 
 	quat();
 	quat(float w, float x, float y, float z);
+	quat(const quat& rhs);
+	virtual ~quat();
 	virtual float getw();
 	virtual float getx();
 	virtual float gety();

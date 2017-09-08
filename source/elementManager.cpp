@@ -1,21 +1,15 @@
 #include "elementManager.hpp"
 
+int elementManager::count = 0;
 
 std::vector<elementManager*> elementManager::elementManagerList;
 
-elementManager* generateElementManager(){
-	return new elementManager();
-}
 
-elementManager::elementManager(){
-}
+elementManager::elementManager(std::shared_ptr<std::vector<vertex>> elementData, btRigidBody* (*bodyGenerator)(std::unique_ptr<parameterPack>))
+	: elementData(elementData), bodyGenerator(bodyGenerator) {
 
-elementManager::elementManager(std::vector<vertex> elementData, btRigidBody* (*bodyGenerator)(parameterPack*)){
 
-	this->elementData = elementData;
-	this->bodyGenerator = bodyGenerator;
-
-	registervertex(&elementData, &indexBufferArray);
+	registervertex(elementData, &indexBufferArray);
 
 	glGenBuffers(1, &indexBufferObject);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBufferObject);
@@ -26,18 +20,32 @@ elementManager::elementManager(std::vector<vertex> elementData, btRigidBody* (*b
 
 
 	elementManagerList.push_back(this);
+
+	count++;
 }
 
 elementManager::~elementManager(){
+	while(elements.empty() == false){
+		delete elements.back();
+		elements.pop_back();
+	}
+
+	count--;
+}
+
+void elementManager::destroySelf(){
+	delete this;
 }
 
 
 
-elementNode* elementManager::generate(parameterPack* input){
+elementNode* elementManager::generate(parameterPack* raw_input){
 
-	vec3 position = input->search("position")->getVec3();
-	vec3 scale = input->search("scale")->getVec3();
-	quat rotation = input->search("rotation")->getQuat();
+	auto input = std::unique_ptr<parameterPack>(raw_input);
+
+	vec3 position = *input->search("position")->getVec3();
+	vec3 scale    = *input->search("scale")->getVec3();
+	quat rotation = *input->search("rotation")->getQuat();
 
 	instanceMatrixArray.push_back(
 					glm::translate(glm::mat4(1.0f), position.toGlm())
@@ -45,7 +53,9 @@ elementNode* elementManager::generate(parameterPack* input){
 					* glm::scale(glm::mat4(1.0f), scale.toGlm())
 					);
 
-	btRigidBody *newbody = bodyGenerator(input);
+	input->add(param("caller", this));
+
+	btRigidBody *newbody = bodyGenerator(std::move(input));
 	elementNode *newNode = new elementNode(elements.size(), this, newbody, position, scale, rotation);
 	elements.push_back(newNode);
 
@@ -53,7 +63,7 @@ elementNode* elementManager::generate(parameterPack* input){
 }
 
 
-void elementManager::destroy(int id){
+void elementManager::destroyElement(int id){
 	delete elements.at(id);
 	elements[id] = elements.back();
 	elements[id]->changeID(id);
@@ -86,12 +96,17 @@ void elementManager::render(){
 
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBufferObject);
 
-	glDrawElementsInstanced(GL_TRIANGLES, elementData.size(), GL_UNSIGNED_INT, (void*)0, elements.size());
+	glDrawElementsInstanced(GL_TRIANGLES, elementData->size(), GL_UNSIGNED_INT, (void*)0, elements.size());
 
 
 }
 
 extern "C"
-elementManager* createElementManager(vertexManager& vm, btRigidBody* (*bodyGenerator)(parameterPack*)){
-	return new elementManager(vm.getList(), bodyGenerator);
+elementManager* createElementManager(vertexManager* vm, btRigidBody* (*bodyGenerator)(std::unique_ptr<parameterPack>)){
+	return new elementManager(std::unique_ptr<vertexManager>(vm)->getList(), bodyGenerator);//XXX 未確認
+}
+
+std::shared_ptr<std::vector<vertex>> elementManager::getElementDataPtr(){
+	return elementData;
+
 }

@@ -354,16 +354,7 @@ int main(){
 	initVBO();
 
 
-	//<Test Code>
-
-
-	//getCubeshape().generate(paramWrap(param("position",vec3(0, 0, 0)), param("scale", vec3(1, 1, 1)), param("rotation", quat(1, 0, 0, 0)), param("mass", 1)));
-	//getPlaneshape().generate(paramWrap(param("position",vec3(0, 0, 0)), param("scale", vec3(1, 1, 1)), param("face", vec3(0, 1, 0)), param("rotation", quat(1, 0, 0, 0)), param("mass", 0)));
-
-
-
-	//<\Test Code>
-
+	initPrimitives();
 
 
 	void *lh;
@@ -463,6 +454,8 @@ int main(){
 		glfwPollEvents();
 	}
 
+	std::cout << "stopping program..." << std::endl;
+
 	glDisableVertexAttribArray(0);
 	glDisableVertexAttribArray(1);
 	glDisableVertexAttribArray(2);
@@ -475,11 +468,42 @@ int main(){
 	dlclose(lh);
 
 
+	while(elementManager::elementManagerList.empty() == false){
+		delete elementManager::elementManagerList.back();
+		elementManager::elementManagerList.pop_back();
+	}
+
+	delete dynamicsWorld;
+	delete solver;
+	delete dispatcher;
+	delete collisionConfiguration;
+	delete broadphase;
+
 	glDeleteVertexArrays(1, &VertexArrayID);
 	glDeleteProgram(programID);
 
 	// Close OpenGL window and terminate GLFW
 	glfwTerminate();
+
+
+
+	std::cout << "paramWrapper: " << paramWrapper::count << std::endl;
+	std::cout << "parameterPack: " << parameterPack::count << std::endl;
+	std::cout << "univStr: " << univStr::count << std::endl;
+	std::cout << "vec3: " << vec3::count << std::endl;
+	std::cout << "quat: " << quat::count << std::endl;
+	std::cout << "vertex: " << vertex::count << std::endl;
+	std::cout << "vertexManager: " << vertexManager::count << std::endl;
+	std::cout << "hingeConstraint: " << hingeConstraint::count << std::endl;
+	std::cout << "generic6DofConstraint: " << generic6DofConstraint::count << std::endl;
+	std::cout << "elementManager: " << elementManager::count << std::endl;
+	std::cout << "elementNode: " << elementNode::count << std::endl;
+
+
+
+
+
+
 
 
 	return 0;
