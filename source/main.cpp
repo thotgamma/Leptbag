@@ -49,6 +49,9 @@ GLuint uniform_projectionMatrix;
 GLuint uniform_LightColor;
 GLuint uniform_LightPower;
 GLuint uniform_LightDirection;
+GLuint uniform_depthBiasVP;
+
+
 
 
 btDiscreteDynamicsWorld* dynamicsWorld;
@@ -324,20 +327,21 @@ int main(){
 
 	// Create and compile our GLSL program from the shaders
 	GLuint programID = LoadShaders( "main.vert", "main.frag" );
-	// Get a handle for our "MVP" uniform
+	// Get a handle for our "VP" uniform
 	uniform_viewMatrix = glGetUniformLocation(programID, "V");
 	uniform_projectionMatrix = glGetUniformLocation(programID, "P");
 	uniform_LightColor = glGetUniformLocation(programID, "LightColor");
 	uniform_LightPower = glGetUniformLocation(programID, "LightPower");
 	uniform_LightDirection = glGetUniformLocation(programID, "LightDirection");
+	uniform_depthBiasVP = glGetUniformLocation(programID, "DepthBiasVP");
 
 
 	//----- 影関連 -----//
 
 	// Create and compile our GLSL program from the shaders
 	GLuint depthProgramID = LoadShaders( "depthBuffer.vert", "depthBuffer.frag");
-	// Get a handle for our "MVP" uniform
-	GLuint depthMatrixID = glGetUniformLocation(depthProgramID, "depthMVP");
+	// Get a handle for our "VP" uniform
+	GLuint depthMatrixID = glGetUniformLocation(depthProgramID, "depthMV");
 
 	// The framebuffer, which regroups 0, 1, or more textures, and 0 or 1 depth buffer.
 	GLuint FramebufferName;
@@ -492,23 +496,16 @@ int main(){
 
 		glm::vec3 lightInvDir = glm::vec3(0.5f,2,2);
 
-		// Compute the MVP matrix from the light's point of view
-		glm::mat4 depthProjectionMatrix = glm::ortho<float>(-10,10,-10,10,-10,20);
+		// Compute the VP matrix from the light's point of view
+		glm::mat4 depthProjectionMatrix = glm::ortho<float>(-50,50,-50,50,-10,20);
 		glm::mat4 depthViewMatrix = glm::lookAt(lightInvDir, glm::vec3(0,0,0), glm::vec3(0,1,0));
 
-		glm::mat4 depthModelMatrix = glm::mat4(1.0);
-		glm::mat4 depthMVP = depthProjectionMatrix * depthViewMatrix * depthModelMatrix;
+		glm::mat4 depthVP = depthProjectionMatrix * depthViewMatrix;
 
-		// Send our transformation to the currently bound shader, 
-		// in the "MVP" uniform
-		glUniformMatrix4fv(depthMatrixID, 1, GL_FALSE, &depthMVP[0][0]);
+		// Send our transformation to the currently bound shader,
+		// in the "VP" uniform
+		glUniformMatrix4fv(depthMatrixID, 1, GL_FALSE, &depthVP[0][0]);
 
-
-		glUniformMatrix4fv(uniform_viewMatrix,       1, GL_FALSE, &ViewMatrix[0][0]);
-		glUniformMatrix4fv(uniform_projectionMatrix, 1, GL_FALSE, &ProjectionMatrix[0][0]);
-		glUniform3fv(uniform_LightColor, 1, &lightColor[0]);
-		glUniform1fv(uniform_LightPower, 1, &lightPower);
-		glUniform3fv(uniform_LightDirection, 1, &lightDirection[0]);
 
 		glBindBuffer(GL_ARRAY_BUFFER, vertexBufferObject);
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(vertex), (void*)0);
@@ -534,11 +531,21 @@ int main(){
 
 		glUseProgram(programID);
 
+
+		glm::mat4 biasMatrix(
+			0.5, 0.0, 0.0, 0.0,
+			0.0, 0.5, 0.0, 0.0,
+			0.0, 0.0, 0.5, 0.0,
+			0.5, 0.5, 0.5, 1.0
+		);
+		glm::mat4 depthBiasVP = biasMatrix*depthVP;
+
 		glUniformMatrix4fv(uniform_viewMatrix,       1, GL_FALSE, &ViewMatrix[0][0]);
 		glUniformMatrix4fv(uniform_projectionMatrix, 1, GL_FALSE, &ProjectionMatrix[0][0]);
-		glUniform3fv(uniform_LightColor, 1, &lightColor[0]);
-		glUniform1fv(uniform_LightPower, 1, &lightPower);
-		glUniform3fv(uniform_LightDirection, 1, &lightDirection[0]);
+		glUniformMatrix4fv(uniform_depthBiasVP,      1, GL_FALSE, &depthBiasVP[0][0]);
+		glUniform3fv      (uniform_LightColor,       1, &lightColor[0]);
+		glUniform1fv      (uniform_LightPower,       1, &lightPower);
+		glUniform3fv      (uniform_LightDirection,   1, &lightDirection[0]);
 
 		glBindBuffer(GL_ARRAY_BUFFER, vertexBufferObject);
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(vertex), (void*)0);

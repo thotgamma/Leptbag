@@ -8,18 +8,22 @@ layout(location = 3) in mat4 M;
 
 out vec3 fragmentColor;
 out vec3 Normal;
+out vec4 shadowCoord;
 
 
 uniform mat4 V;
 uniform mat4 P;
+uniform mat4 DepthBiasVP;
 
 
-void main(){	
+void main(){
 
 	gl_Position =  P * V * M * vec4(vertexPosition_modelspace ,1);
 	fragmentColor = vertexColor;
 
 	Normal = normalize(M * vec4(vertexNormal_modelspace,0)).xyz;
+
+	shadowCoord = DepthBiasVP * M * vec4(vertexPosition_modelspace, 1);
 
 }
 

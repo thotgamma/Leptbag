@@ -3,6 +3,7 @@
 // Interpolated values from the vertex shaders
 in vec3 fragmentColor;
 in vec3 Normal;
+in vec4 shadowCoord;
 
 
 // Ouput data
@@ -11,6 +12,7 @@ out vec3 color;
 uniform vec3 LightColor;
 uniform float LightPower;
 uniform vec3 LightDirection;
+uniform sampler2DShadow shadowMap;
 
 
 void main(){
@@ -23,8 +25,10 @@ void main(){
 	vec3 l = normalize(LightDirection);
 	float cosTheta = clamp(dot(Normal, l), 0, 1);
 
+	float visibility = texture( shadowMap, vec3(shadowCoord.xy, (shadowCoord.z)/shadowCoord.w) );
+
 
 	color = MaterialAmbientColor
-		  + MaterialDiffuseColor * LightColor * LightPower * cosTheta;
+		  + visibility * MaterialDiffuseColor * LightColor * LightPower * cosTheta;
 
 }
