@@ -19,13 +19,14 @@ void main(){
 
 
 	vec3 MaterialDiffuseColor = fragmentColor;
-	vec3 MaterialAmbientColor = vec3(0.6, 0.6, 0.6) * MaterialDiffuseColor;
+	vec3 MaterialAmbientColor = vec3(0.5, 0.5, 0.5) * MaterialDiffuseColor;
 
 
 	vec3 l = normalize(LightDirection);
 	float cosTheta = clamp(dot(Normal, l), 0, 1);
 
-	float visibility = texture( shadowMap, vec3(shadowCoord.xy, (shadowCoord.z)/shadowCoord.w) );
+
+	float visibility = texture( shadowMap, vec3(shadowCoord.xy, (shadowCoord.z - 0.005)/shadowCoord.w));
 
 
 	color = MaterialAmbientColor

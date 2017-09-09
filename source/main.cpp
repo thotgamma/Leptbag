@@ -29,6 +29,7 @@
 #include "bodyGenerator.hpp"
 #include "primitiveShape.hpp"
 
+constexpr int shadowMapBufferSize = 4096;
 
 GLFWwindow* window;
 
@@ -355,7 +356,7 @@ int main(){
 	GLuint depthTexture;
 	glGenTextures(1, &depthTexture);
 	glBindTexture(GL_TEXTURE_2D, depthTexture);
-	glTexImage2D(GL_TEXTURE_2D, 0,GL_DEPTH_COMPONENT32, 2048, 2048, 0,GL_DEPTH_COMPONENT, GL_FLOAT, 0);
+	glTexImage2D(GL_TEXTURE_2D, 0,GL_DEPTH_COMPONENT32, shadowMapBufferSize, shadowMapBufferSize, 0,GL_DEPTH_COMPONENT, GL_FLOAT, 0);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR); 
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -482,7 +483,7 @@ int main(){
 
 		// Render to our framebuffer
 		glBindFramebuffer(GL_FRAMEBUFFER, FramebufferName);
-		glViewport(0,0,2048,2048); // Render on the whole framebuffer, complete from the lower left corner to the upper right
+		glViewport(0,0,shadowMapBufferSize,shadowMapBufferSize); // Render on the whole framebuffer, complete from the lower left corner to the upper right
 
 		// We don't use bias in the shader, but instead we draw back faces, 
 		// which are already separated from the front faces by a small distance 
@@ -496,11 +497,11 @@ int main(){
 		// Use our shader
 		glUseProgram(depthProgramID);
 
-		glm::vec3 lightInvDir = lightDirection;
+		glm::vec3 lightPosition = glm::vec3(position.x, 0, position.z);
 
 		// Compute the VP matrix from the light's point of view
-		glm::mat4 depthProjectionMatrix = glm::ortho<float>(-50,50,-50,50,-10,20);
-		glm::mat4 depthViewMatrix = glm::lookAt(lightInvDir, glm::vec3(0,0,0), glm::vec3(0,1,0));
+		glm::mat4 depthProjectionMatrix = glm::ortho<float>(-50,50,-50,50,-10,30);
+		glm::mat4 depthViewMatrix = glm::lookAt(lightPosition, lightPosition-lightDirection, glm::vec3(0,1,0));
 
 		glm::mat4 depthVP = depthProjectionMatrix * depthViewMatrix;
 
