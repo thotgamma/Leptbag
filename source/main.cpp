@@ -50,6 +50,7 @@ GLuint uniform_LightColor;
 GLuint uniform_LightPower;
 GLuint uniform_LightDirection;
 GLuint uniform_depthBiasVP;
+GLuint ShadowMapID;
 
 
 
@@ -334,6 +335,7 @@ int main(){
 	uniform_LightPower = glGetUniformLocation(programID, "LightPower");
 	uniform_LightDirection = glGetUniformLocation(programID, "LightDirection");
 	uniform_depthBiasVP = glGetUniformLocation(programID, "DepthBiasVP");
+	ShadowMapID = glGetUniformLocation(programID, "shadowMap");
 
 
 	//----- 影関連 -----//
@@ -353,7 +355,7 @@ int main(){
 	GLuint depthTexture;
 	glGenTextures(1, &depthTexture);
 	glBindTexture(GL_TEXTURE_2D, depthTexture);
-	glTexImage2D(GL_TEXTURE_2D, 0,GL_DEPTH_COMPONENT16, 1024, 1024, 0,GL_DEPTH_COMPONENT, GL_FLOAT, 0);
+	glTexImage2D(GL_TEXTURE_2D, 0,GL_DEPTH_COMPONENT32, 2048, 2048, 0,GL_DEPTH_COMPONENT, GL_FLOAT, 0);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR); 
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -480,7 +482,7 @@ int main(){
 
 		// Render to our framebuffer
 		glBindFramebuffer(GL_FRAMEBUFFER, FramebufferName);
-		glViewport(0,0,1024,1024); // Render on the whole framebuffer, complete from the lower left corner to the upper right
+		glViewport(0,0,2048,2048); // Render on the whole framebuffer, complete from the lower left corner to the upper right
 
 		// We don't use bias in the shader, but instead we draw back faces, 
 		// which are already separated from the front faces by a small distance 
@@ -494,7 +496,7 @@ int main(){
 		// Use our shader
 		glUseProgram(depthProgramID);
 
-		glm::vec3 lightInvDir = glm::vec3(0.5f,2,2);
+		glm::vec3 lightInvDir = lightDirection;
 
 		// Compute the VP matrix from the light's point of view
 		glm::mat4 depthProjectionMatrix = glm::ortho<float>(-50,50,-50,50,-10,20);
@@ -546,6 +548,10 @@ int main(){
 		glUniform3fv      (uniform_LightColor,       1, &lightColor[0]);
 		glUniform1fv      (uniform_LightPower,       1, &lightPower);
 		glUniform3fv      (uniform_LightDirection,   1, &lightDirection[0]);
+
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, depthTexture);
+		glUniform1i(ShadowMapID, 1);
 
 		glBindBuffer(GL_ARRAY_BUFFER, vertexBufferObject);
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(vertex), (void*)0);
