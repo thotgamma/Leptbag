@@ -488,8 +488,7 @@ int main(){
 		// We don't use bias in the shader, but instead we draw back faces, 
 		// which are already separated from the front faces by a small distance 
 		// (if your geometry is made this way)
-		glEnable(GL_CULL_FACE);
-		glCullFace(GL_BACK); // Cull back-facing triangles -> draw only front-facing triangles
+		//glCullFace(GL_FRONT); // Cull back-facing triangles -> draw only front-facing triangles
 
 		// Clear the screen
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -500,7 +499,7 @@ int main(){
 		glm::vec3 lightPosition = glm::vec3(position.x, 0, position.z);
 
 		// Compute the VP matrix from the light's point of view
-		glm::mat4 depthProjectionMatrix = glm::ortho<float>(-50,50,-50,50,-10,30);
+		glm::mat4 depthProjectionMatrix = glm::ortho<float>(-10,10,-10,10,-20,20);
 		glm::mat4 depthViewMatrix = glm::lookAt(lightPosition, lightPosition-lightDirection, glm::vec3(0,1,0));
 
 		glm::mat4 depthVP = depthProjectionMatrix * depthViewMatrix;
@@ -526,8 +525,7 @@ int main(){
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		glViewport(0, 0, windowWidth*2, windowHeight*2); // Render on the whole framebuffer, complete from the lower left corner to the upper right
 
-		glEnable(GL_CULL_FACE);
-		glCullFace(GL_BACK); // Cull back-facing triangles -> draw only front-facing triangles
+		//glCullFace(GL_BACK); // Cull back-facing triangles -> draw only front-facing triangles
 
 		// Clear the screen
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);

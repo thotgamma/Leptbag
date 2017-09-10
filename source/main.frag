@@ -26,7 +26,11 @@ void main(){
 	float cosTheta = clamp(dot(Normal, l), 0, 1);
 
 
-	float visibility = texture( shadowMap, vec3(shadowCoord.xy, (shadowCoord.z - 0.005)/shadowCoord.w));
+	
+	float bias = 0.0005*tan(acos(cosTheta)); // cosThetaはdot( n,l )で0と1の間にします。
+	bias = clamp(bias, 0, 0.01);
+
+	float visibility = texture( shadowMap, vec3(shadowCoord.xy, (shadowCoord.z - bias)/shadowCoord.w));
 
 
 	color = MaterialAmbientColor
