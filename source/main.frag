@@ -19,7 +19,7 @@ void main(){
 
 
 	vec3 MaterialDiffuseColor = fragmentColor;
-	vec3 MaterialAmbientColor = vec3(0.5, 0.5, 0.5) * MaterialDiffuseColor;
+	vec3 MaterialAmbientColor = vec3(0.3, 0.3, 0.3) * MaterialDiffuseColor;
 
 
 	vec3 l = normalize(LightDirection);
@@ -30,7 +30,12 @@ void main(){
 	float bias = 0.0005*tan(acos(cosTheta)); // cosThetaはdot( n,l )で0と1の間にします。
 	bias = clamp(bias, 0, 0.01);
 
-	float visibility = texture( shadowMap, vec3(shadowCoord.xy, (shadowCoord.z - bias)/shadowCoord.w));
+	float visibility = 1.0f;
+	if (0 <= shadowCoord.x && shadowCoord.x <= 1 && 0 <= shadowCoord.y && shadowCoord.y <= 1){
+		if (texture( shadowMap, vec3(shadowCoord.xy, (shadowCoord.z - bias)/shadowCoord.w)) == 0){
+			visibility = 0.5f;
+		}
+	}
 
 
 	color = MaterialAmbientColor

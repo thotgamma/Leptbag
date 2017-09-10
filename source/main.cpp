@@ -75,7 +75,7 @@ float speed = 0.1f;
 float mouseSpeed = 0.001f;
 
 glm::vec3 lightColor = glm::vec3(1, 1, 1);
-float lightPower = 1.0f;
+float lightPower = 1.5f;
 glm::vec3 lightDirection = glm::vec3(-1, 1, 0);
 
 
@@ -499,7 +499,7 @@ int main(){
 		glm::vec3 lightPosition = glm::vec3(position.x, 0, position.z);
 
 		// Compute the VP matrix from the light's point of view
-		glm::mat4 depthProjectionMatrix = glm::ortho<float>(-10,10,-10,10,-20,20);
+		glm::mat4 depthProjectionMatrix = glm::ortho<float>(-16,16,-16,16,-20,20);
 		glm::mat4 depthViewMatrix = glm::lookAt(lightPosition, lightPosition-lightDirection, glm::vec3(0,1,0));
 
 		glm::mat4 depthVP = depthProjectionMatrix * depthViewMatrix;
