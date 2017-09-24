@@ -101,7 +101,7 @@ struct oscillator2Gene{
 	void init(){
 		degree = 5;
 		oscil = new oscillator2(degree);
-		friction = uniform(0.0f, 5.0f, rnd);
+		friction = 2.0f;//uniform(0.0f, 5.0f, rnd);
 	}
 
 

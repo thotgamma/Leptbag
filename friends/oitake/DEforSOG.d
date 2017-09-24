@@ -28,6 +28,15 @@ void evolveSOG(agent[] children, agent[] parents, float Cr, float F, int[] bests
 
 				if(Cr < uniform(0.0f, 1.0f, rnd)){
 
+					/*
+					//simpleGA
+					if(0.5f <= uniform(0.0f, 1.0f, rnd)){
+						child.SOG.tracks[i][s] = parents[k].SOG.tracks[i][s];
+					}else{
+						child.SOG.tracks[i][s] = parents[l].SOG.tracks[i][s];
+					}
+					*/
+
 					child.SOG.tracks[i][s] = createVec3(
 							parents[k].SOG.tracks[i][s].getx() + F * ( parents[m].SOG.tracks[i][s].getx() - parents[l].SOG.tracks[i][s].getx() ),
 							parents[k].SOG.tracks[i][s].gety() + F * ( parents[m].SOG.tracks[i][s].gety() - parents[l].SOG.tracks[i][s].gety() ),
@@ -40,8 +49,48 @@ void evolveSOG(agent[] children, agent[] parents, float Cr, float F, int[] bests
 
 				}
 
+
+
 			}
 		}
+
+		//writeln("j", j);
+
+
+		/*
+		if(j==0){
+			writeln("neko");
+
+			writeln("child");
+			foreach(string s, dof; child.g6dofs){
+				write(s, " ( ");
+				for(uint i=0; i<child.SOG.lengthOfSet; i++){
+					write(i, ": ", child.SOG.tracks[i][s].getx(), ", ");
+				}
+				writeln(")");
+			}
+
+			writeln("1");
+			foreach(string s, dof; child.g6dofs){
+				write(s, " ( ");
+				for(uint i=0; i<child.SOG.lengthOfSet; i++){
+					write(i, ":", parents[k].SOG.tracks[i][s].getx(), ", ");
+				}
+				writeln(")");
+			}
+
+			writeln("2");
+			foreach(string s, dof; child.g6dofs){
+				write(s, " ( ");
+				for(uint i=0; i<child.SOG.lengthOfSet; i++){
+					write(i, ":", parents[l].SOG.tracks[i][s].getx(), ", ");
+				}
+				writeln(")");
+			}
+		}
+		*/
+
+
 
 	}
 
