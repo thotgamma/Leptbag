@@ -178,9 +178,9 @@ class fpmExporter(bpy.types.Operator, ExportHelper):
                         fo.write("\t\t\"yAngLimitUpper\":%f,\n" % obj.rigid_body_constraint.limit_ang_z_upper)
                         fo.write("\t\t\"zAngLimitUpper\":%f,\n" % obj.rigid_body_constraint.limit_ang_x_upper)
 
-                        fo.write("\t\t\"useXLinLimit\":\"%s\",\n" % obj.rigid_body_constraint.use_limit_ang_y)
-                        fo.write("\t\t\"useYLinLimit\":\"%s\",\n" % obj.rigid_body_constraint.use_limit_ang_z)
-                        fo.write("\t\t\"useZLinLimit\":\"%s\",\n" % obj.rigid_body_constraint.use_limit_ang_x)
+                        fo.write("\t\t\"useXLinLimit\":\"%s\",\n" % obj.rigid_body_constraint.use_limit_lin_y)
+                        fo.write("\t\t\"useYLinLimit\":\"%s\",\n" % obj.rigid_body_constraint.use_limit_lin_z)
+                        fo.write("\t\t\"useZLinLimit\":\"%s\",\n" % obj.rigid_body_constraint.use_limit_lin_x)
                         fo.write("\t\t\"xLinLimitLower\":%f,\n" % obj.rigid_body_constraint.limit_lin_y_lower)
                         fo.write("\t\t\"yLinLimitLower\":%f,\n" % obj.rigid_body_constraint.limit_lin_z_lower)
                         fo.write("\t\t\"zLinLimitLower\":%f,\n" % obj.rigid_body_constraint.limit_lin_x_lower)

@@ -14,14 +14,9 @@ import loadJson;
 
 Random rnd;
 
-const int agentNum = 100;
-const int moveSpan = 12;
 
-string measuredPart = "head"; //この名前のパーツの移動距離を測る
 const float bodyMass = 5.0f; //動物の総体重．blender側では各パーツに百分率で質量を付与．
 
-agent[] agents; //メイン
-agent[] evaluateds; //DEにおける突然変異個体
 
 /*
 elementManager[string] partsGenerator;

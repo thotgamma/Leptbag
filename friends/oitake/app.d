@@ -17,13 +17,14 @@ import loadJson;
 
 Random rnd;
 
-const int agentNum = 100;
-
-string measuredPart = "head"; //この名前のパーツの移動距離を測る
-const float bodyMass = 50.0f; //動物の総体重．blender側では各パーツに百分率で質量を付与．
+const int agentNum = 50;
+const float bodyMass = 5.0f; //動物の総体重．blender側では各パーツに百分率で質量を付与．
 const float personalSpace = 5.0f; //動物を並べる間隔
+const string measuredPart = "head"; //この名前のパーツの移動距離を測る
+
 agent[] agents; //メインとする群
 agent[] evaluateds; //DEにおける突然変異個体
+
 agentBodyParameter info;
 
 
@@ -53,14 +54,14 @@ extern (C) void init(){
 
 
 	//agents生成
-	agents.length = agentNum;
+	agents.length = agentNum*averageOf;
 	foreach(int i, ref elem; agents){
 		elem = new agent(to!float(i)*personalSpace, 0.0f, -1.0f, info);
 	}
 
 
 	//最初が0世代目
-	writeln("start generation : 0");
+	writeln("start generation 0:");
 
 }
 
@@ -70,8 +71,8 @@ extern (C) void init(){
 
 
 float topScore = 0.0f; //動物たちは-z方向に歩いていることに注意
-float[agentNum] preScores = 0.0f; //突然変異によってより大きく移動すれば突然変異体を採用
-float[agentNum] evaluatedsScores = 0.0f; //突然変異群のスコアを管理
+float[agentNum*averageOf] preScores = 0.0f; //突然変異によってより大きく移動すれば突然変異体を採用
+float[agentNum*averageOf] evaluatedsScores = 0.0f; //突然変異群のスコアを管理
 
 //そのステップ内で行うべき処理を決定するための変数
 int time = 0; //時計
@@ -142,7 +143,6 @@ void terminateTrial(){
 
 	sequence = 0;
 
-	writeln("\n>		trial at : ", trial, "-----\n");
 
 	float proScoreTmp = 0.0f; //この世代の最高移動距離
 	float averageScore = 0.0f;
@@ -187,31 +187,36 @@ void terminateTrial(){
 
 	}
 
+	for(int k=0; k<averageOf; k++){
 
-	//最高記録が出たら記録，表示
-	if(proScoreTmp<topScore){
-		topScore = proScoreTmp;
-		writeln("\n!		top score ever! : ", -1.0f*topScore);
+		writeln("\n>		trial ", trial, ":\n");
+
+		//最高記録が出たら記録，表示
+		if(proScoreTmp<topScore){
+			topScore = proScoreTmp;
+			writeln("\n!			top score ever! : ", -1.0f*topScore);
+		}
+
+		//今回の試行の最高記録
+		writeln("			top score of this trial : ", -1.0f*proScoreTmp);
+
+		//今試行の平均移動距離を表示
+		writeln("			average score : ", -1.0f*averageScore/to!float(agentNum));
+
 	}
-
-	//今回の試行の最高記録
-	writeln("		top score of this trial : ", -1.0f*proScoreTmp);
-
-	//今試行の平均移動距離を表示
-	writeln("		average score : ", -1.0f*averageScore/to!float(agentNum));
-
 
 
 }
+
 
 //試行がaverageOf回行われるたびに実行される処理
 void terminateGeneration(){
 
 
 	if(!evaluation){ //評価フェイズ
-		writeln("	start evaluation : ", generation);
+		writeln("	start evaluation ", generation, ":");
 	}else{
-		writeln("start generation : ", ++generation, "----------------");
+		writeln("start generation ", ++generation, ": ---------------------------------");
 	}
 
 
@@ -245,7 +250,7 @@ void terminateGeneration(){
 
 
 		if(generation==0){ //最初に評価用の犬たちevaluatedsをつくる
-			evaluateds.length = agentNum;
+			evaluateds.length = agentNum*averageOf;
 			foreach(int i, ref elem; evaluateds) elem = new agent(to!float(i)*personalSpace, 0.0f, 0.0f, info);
 
 			//DEに用いるパラメータ
@@ -268,8 +273,8 @@ void terminateGeneration(){
 			//DEに用いるパラメータ
 			float ditherF = uniform(0.5f, 1.0f, rnd);
 			//突然変異
-			evolveBest(evaluateds, agents, 0.1f, ditherF, bests);
-			evolveSOG(evaluateds, agents, 0.1f, ditherF, bests);
+			evolveBest(evaluateds, agents, 0.8f, ditherF, bests);
+			evolveSOG(evaluateds, agents, 0.8f, ditherF, bests);
 
 		}
 
