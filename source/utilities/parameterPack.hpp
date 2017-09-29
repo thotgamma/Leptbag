@@ -13,7 +13,6 @@ class parameterPack;
 #include "../vertexManager.hpp"
 #include "../elementManager.hpp"
 
-
 class paramWrapper{
 
 	union data_t{
@@ -39,7 +38,6 @@ class paramWrapper{
 	type contain;
 
 	public:
-	static int count;
 	std::unique_ptr<univStr> tag;
 
 	paramWrapper() = delete;
@@ -51,7 +49,8 @@ class paramWrapper{
 	paramWrapper(std::unique_ptr<univStr>, vertexManager* modelValue);
 	paramWrapper(std::unique_ptr<univStr>, elementManager* emValue);
 
-	~paramWrapper();
+	virtual void destroy();
+	virtual ~paramWrapper();
 
 	int getInt();
 	float getFloat();
@@ -70,17 +69,24 @@ extern "C" paramWrapper* createQuatParam  (univStr *tag, quat *value);
 extern "C" paramWrapper* createModelParam (univStr *tag, vertexManager *value);
 extern "C" paramWrapper* createEmParam    (univStr *tag, elementManager *value);
 
+class parameterPack_interface{
+	virtual void destroy() = 0;
+};
 
-class parameterPack{
+
+class parameterPack final: public parameterPack_interface{
 
 	std::vector<std::shared_ptr<paramWrapper>> paramList;
 
 	public:
-	static int count;
+
 	parameterPack();
 	parameterPack(int count, va_list arguments);
 	parameterPack(const parameterPack& rhs);
 	~parameterPack();
+
+	virtual void destroy();
+
 	std::shared_ptr<paramWrapper> search(std::string input);
 	void add(paramWrapper* input);
 

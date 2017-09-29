@@ -16,7 +16,8 @@
 
 
 
-class vertex{
+
+class vertex final{
 
 	public:
 	static int count;
@@ -36,9 +37,7 @@ class vertex{
 			GLfloat colorR, GLfloat colorG, GLfloat colorB);
     vertex(const vertex &rhs);
 
-
 	~vertex();
-
 
 	bool operator==(const vertex& v) {
 		return (	this->positionX == v.positionX
@@ -61,20 +60,23 @@ extern std::vector <vertex> vertexBufferArray;
 
 extern void initVBO();
 
-extern void registervertex(std::shared_ptr<std::vector<vertex>> input, std::vector<GLuint>* arrayaddr);
+extern void registervertex(std::shared_ptr<std::vector<std::shared_ptr<vertex>>> input, std::vector<GLuint>* arrayaddr);
 
-extern "C" vertex* createVertex(float coordinate_x, float coordinate_y, float coordinate_z, float normal_x, float normal_y, float normal_z, float color_r, float color_g, float color_b);
+
+class vertexManager_interface{
+	virtual void addVertex(vertex& input) = 0;
+	virtual void destroy() = 0;
+};
 
 
 class vertexManager{
-	std::shared_ptr<std::vector<vertex>> vertexList;
+	std::shared_ptr<std::vector<std::shared_ptr<vertex>>> vertexList;
 	public:
-	static int count;
-	virtual void addVertex(vertex& input);
-	std::shared_ptr<std::vector<vertex>> getList();
-
+	virtual void addVertex(float coordinate_x, float coordinate_y, float coordinate_z, float normal_x, float normal_y, float normal_z, float color_r, float color_g, float color_b);
+	virtual void destroy();
+	virtual ~vertexManager();
+	std::shared_ptr<std::vector<std::shared_ptr<vertex>>> getList();
 	vertexManager();
-	~vertexManager();
 };
 
 extern "C" vertexManager* createVertexManager();

@@ -1,11 +1,10 @@
 #include "elementManager.hpp"
 
-int elementManager::count = 0;
 
 std::vector<elementManager*> elementManager::elementManagerList;
 
 
-elementManager::elementManager(std::shared_ptr<std::vector<vertex>> elementData, btRigidBody* (*bodyGenerator)(std::unique_ptr<parameterPack>))
+elementManager::elementManager(std::shared_ptr<std::vector<std::shared_ptr<vertex>>> elementData, btRigidBody* (*bodyGenerator)(std::unique_ptr<parameterPack>))
 	: elementData(elementData), bodyGenerator(bodyGenerator) {
 
 
@@ -21,7 +20,6 @@ elementManager::elementManager(std::shared_ptr<std::vector<vertex>> elementData,
 
 	elementManagerList.push_back(this);
 
-	count++;
 }
 
 elementManager::~elementManager(){
@@ -30,7 +28,6 @@ elementManager::~elementManager(){
 		elements.pop_back();
 	}
 
-	count--;
 }
 
 void elementManager::destroySelf(){
@@ -103,10 +100,10 @@ void elementManager::render(){
 
 extern "C"
 elementManager* createElementManager(vertexManager* vm, btRigidBody* (*bodyGenerator)(std::unique_ptr<parameterPack>)){
-	return new elementManager(std::unique_ptr<vertexManager>(vm)->getList(), bodyGenerator);//XXX 未確認
+	return new elementManager(std::shared_ptr<vertexManager>(vm)->getList(), bodyGenerator);
 }
 
-std::shared_ptr<std::vector<vertex>> elementManager::getElementDataPtr(){
+std::shared_ptr<std::vector<std::shared_ptr<vertex>>> elementManager::getElementDataPtr(){
 	return elementData;
 
 }

@@ -17,7 +17,7 @@ class elementManager;
 #include "utilities/utilities.hpp"
 #include "elementNode.hpp"
 #include "bodyGenerator.hpp"
-#include "vertexmanager.hpp"
+#include "vertexManager.hpp"
 
 class elementManager_interface{
 	public:
@@ -35,19 +35,18 @@ class elementManager : public elementManager_interface {
 	std::vector<elementNode*> elements;
 
 	public:
-	static int count;
 	static std::vector<elementManager*> elementManagerList;
-	std::shared_ptr<std::vector<vertex>> elementData;
+	std::shared_ptr<std::vector<std::shared_ptr<vertex>>> elementData;
 	btRigidBody* (*bodyGenerator)(std::unique_ptr<parameterPack>);
 
-	elementManager(std::shared_ptr<std::vector<vertex>> elementData, btRigidBody* (*bodyGenerator)(std::unique_ptr<parameterPack>));
+	elementManager(std::shared_ptr<std::vector<std::shared_ptr<vertex>>> elementData, btRigidBody* (*bodyGenerator)(std::unique_ptr<parameterPack>));
 
 	virtual elementNode* generate(parameterPack* input);
 	virtual void destroySelf();
 	virtual void destroyElement(int id);
 	virtual ~elementManager();
 	void render();
-	std::shared_ptr<std::vector<vertex>> getElementDataPtr();
+	std::shared_ptr<std::vector<std::shared_ptr<vertex>>> getElementDataPtr();
 
 
 };

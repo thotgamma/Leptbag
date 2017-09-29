@@ -20,7 +20,7 @@
 #include <bullet/btBulletDynamicsCommon.h>
 
 
-#include "vertexmanager.hpp"
+#include "vertexManager.hpp"
 #include "shader.hpp"
 #include "constraints.hpp"
 #include "utilities/utilities.hpp"
@@ -404,7 +404,9 @@ int main(){
 	initPrimitives();
 
 
-	void *lh;
+
+	std::vector<void*> dllList;
+
 	const char* path = "./friends/";
 	DIR *dp;       // ディレクトリへのポインタ
 	dirent* entry; // readdir() で返されるエントリーポイント
@@ -416,7 +418,7 @@ int main(){
 		std::string filename(entry->d_name);
 		if(split(filename,'.').size() >= 2 && split(filename, '.')[1] == "friends"){
 
-			lh = dlopen((path + filename).c_str(), RTLD_LAZY);
+			void* lh = dlopen((path + filename).c_str(), RTLD_LAZY);
 			if (!lh) {
 				fprintf(stderr, "dlopen error: %s\n", dlerror());
 				exit(1);
@@ -438,6 +440,7 @@ int main(){
 			}
 			pluginTickVector.push_back(*pluginTick);
 
+			dllList.push_back(lh);
 
 
 		}
@@ -449,6 +452,7 @@ int main(){
 	for(auto elem: pluginInitVector){
 		(elem)();
 	}
+
 
 
 	glEnableVertexAttribArray(0);
@@ -577,7 +581,11 @@ int main(){
 	glDisableVertexAttribArray(6);
 
 	printf("unloading libdll.so\n");
-	dlclose(lh);
+
+	while(dllList.empty() == false){
+		dlclose(dllList.back());
+		dllList.pop_back();
+	}
 
 
 	while(elementManager::elementManagerList.empty() == false){
@@ -596,25 +604,6 @@ int main(){
 
 	// Close OpenGL window and terminate GLFW
 	glfwTerminate();
-
-
-
-	std::cout << "paramWrapper: " << paramWrapper::count << std::endl;
-	std::cout << "parameterPack: " << parameterPack::count << std::endl;
-	std::cout << "univStr: " << univStr::count << std::endl;
-	std::cout << "vec3: " << vec3::count << std::endl;
-	std::cout << "quat: " << quat::count << std::endl;
-	std::cout << "vertex: " << vertex::count << std::endl;
-	std::cout << "vertexManager: " << vertexManager::count << std::endl;
-	std::cout << "hingeConstraint: " << hingeConstraint::count << std::endl;
-	std::cout << "generic6DofConstraint: " << generic6DofConstraint::count << std::endl;
-	std::cout << "elementManager: " << elementManager::count << std::endl;
-	std::cout << "elementNode: " << elementNode::count << std::endl;
-
-
-
-
-
 
 
 
