@@ -9,7 +9,6 @@ import std.algorithm;
 import japariSDK.japarilib;
 import Oscillator;
 
-Random rnd;
 
 struct agentBodyParameter{
 	elementManager[string] partsGenerator;
@@ -80,12 +79,34 @@ struct serialOrderGene{
 	void init(){}
 
 	void init(string s){
+		auto rnd = Random(unpredictableSeed);
 		for(int i=0; i<lengthOfSet; i++){
-			tracks[i][s] = createVec3( uniform(-1.57f, 1.57f, rnd), uniform(-1.57f, 1.57f, rnd), 0.0f );
+			tracks[i][s] = createVec3( uniform(-1.57f/2.0f, 1.57f/2.0f, rnd), uniform(-1.57f/2.0f, 1.57f/2.0f, rnd), 0.0f );
 			//write(s, ":", i, "(", tracks[i][s].getx(), ", ", tracks[i][s].gety(), ")");
 		}
 	}
+
+	void init(int i, string s){
+		auto rnd = Random(unpredictableSeed);
+		tracks[i][s] = createVec3( uniform(-1.57f/2.0f, 1.57f/2.0f, rnd), uniform(-1.57f/2.0f, 1.57f/2.0f, rnd), 0.0f );
+	}
+
+
+	void copytracks(serialOrderGene u){
+		foreach(int i, elem1; this.tracks){
+			foreach(string s, elem2; elem1){
+				this.tracks[i][s] = createVec3( u.tracks[i][s].getx(), u.tracks[i][s].gety(), u.tracks[i][s].getz() );
+			}
+		}
+	}
+
+	void copytracks(serialOrderGene u,int i,string s){
+		this.tracks[i][s] = createVec3( u.tracks[i][s].getx(), u.tracks[i][s].gety(), u.tracks[i][s].getz() );
+	}
+
+
 }
+
 
 struct oscillator2Gene{
 
@@ -101,6 +122,7 @@ struct oscillator2Gene{
 	void init(){
 		degree = 5;
 		oscil = new oscillator2(degree);
+		auto rnd = Random(unpredictableSeed);
 		friction = 2.0f;//uniform(0.0f, 5.0f, rnd);
 	}
 
@@ -108,6 +130,7 @@ struct oscillator2Gene{
 	//各関節で異なるパラメータの初期化
 	//blenderで定義した関節制限角度を用いない場合
 	void init(string s){
+		auto rnd = Random(unpredictableSeed);
 
 		maxForce[s] = createVec3( uniform(0.0f, 10.0f, rnd), uniform(0.0f, 10.0f, rnd), 0.0f );
 		maxVelo[s] = createVec3( uniform(0.0f, 10.0f, rnd), uniform(0.0f, 10.0f, rnd), uniform(0.0f, 10.0f, rnd) );
@@ -123,6 +146,7 @@ struct oscillator2Gene{
 	//関節角度をblenderから読込む場合
 	void init(string s, g6dofParam dofParam){
 
+		auto rnd = Random(unpredictableSeed);
 		maxForce[s] = createVec3( uniform(0.0f, 10.0f, rnd), uniform(0.0f, 10.0f, rnd), 0.0f );
 		maxVelo[s] = createVec3( uniform(0.0f, 10.0f, rnd), uniform(0.0f, 10.0f, rnd), uniform(0.0f, 10.0f, rnd) );
 

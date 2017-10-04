@@ -15,7 +15,7 @@ import loadJson;
 Random rnd;
 
 
-const float bodyMass = 5.0f; //動物の総体重．blender側では各パーツに百分率で質量を付与．
+const float bodyMass = 10.0f; //動物の総体重．blender側では各パーツに百分率で質量を付与．
 
 
 /*
@@ -47,6 +47,13 @@ class agent{
 			bodyInfomation.partsGenerator[name] = createElementManager(bodyInfomation.partParams[name].vertices, &createConvexHullShapeBody);
 		}
 		spawn(createVec3(x, y, z));
+		SOG.init();
+		gene.init();
+		foreach(string s, dof; g6dofs){
+			SOG.init(s);
+			gene.init(s);
+		}
+		gene.rehash();
 
 	}
 
@@ -92,15 +99,13 @@ class agent{
 		g6dofs = g6dofs.rehash;
 
 
-		SOG.init();
-		gene.init();
-		foreach(part; parts) part.setFriction(gene.friction);
+
+		foreach(part; parts) part.setFriction(3.5);
 
 
 		foreach(string s, dof; g6dofs){
 
-			SOG.init(s);
-			gene.init(s);
+
 
 			for(int i=0; i<3; i++){
 				if(bodyInfomation.g6dofParams[s].useAngLimit[i]) g6dofs[s].setRotationalMotor(i);
@@ -114,8 +119,22 @@ class agent{
 
 			vec3 zeroVec3 = createVec3( 0.0, 0.0, 0.0 ); //セッターに同じvec3を入れるとロック
 
-			g6dofs[s].setAngularLimit( bodyInfomation.g6dofParams[s].angLimitLower, bodyInfomation.g6dofParams[s].angLimitUpper );
-			g6dofs[s].setLinearLimit( zeroVec3, zeroVec3 );
+			bool useAng = true;
+			for(int i=0; i<bodyInfomation.g6dofParams[s].useAngLimit.length; i++) useAng = useAng && bodyInfomation.g6dofParams[s].useAngLimit[i];
+			if(useAng){
+				g6dofs[s].setAngularLimit( bodyInfomation.g6dofParams[s].angLimitLower, bodyInfomation.g6dofParams[s].angLimitUpper );
+			}else{
+				g6dofs[s].setAngularLimit( zeroVec3, zeroVec3 );
+			}
+
+
+			bool useLin = true;
+			for(int i=0; i<bodyInfomation.g6dofParams[s].useLinLimit.length; i++) useLin = useLin && bodyInfomation.g6dofParams[s].useLinLimit[i];
+			if(false){//useLin){
+				g6dofs[s].setLinearLimit( bodyInfomation.g6dofParams[s].linLimitLower, bodyInfomation.g6dofParams[s].linLimitUpper );
+			}else{
+				g6dofs[s].setLinearLimit( zeroVec3, zeroVec3 );
+			}
 
 			//最大出力．index ; (x, y, z)=(0, 1, 2)(たぶん？)
 			g6dofs[s].setMaxRotationalMotorForce( 0, 10.0); //gene.maxForce[s].getx() );
@@ -124,18 +143,24 @@ class agent{
 
 
 		}
-		gene.rehash();
 
 
 	}
 
+	void despawn(){
+		foreach(string s, part; parts){
+			part.destroy();
+		}
+		foreach(hinge; hinges) hinge.destroy();
+		foreach(dofs; g6dofs) dofs.destroy();
+	}
 
 	void moveWithSerialOrder(int sequence){
 
 		if(g6dofs.length!=0)
 			foreach(string s, dof; g6dofs){
 				dof.setRotationalTargetVelocity( createVec3(
-					4.0*(SOG.tracks[sequence][s].getx() - dof.getAngle(0)),
+					5.0*(SOG.tracks[sequence][s].getx() - dof.getAngle(0)),
 					0.0f, //10.0*(SOG.tracks[sequence][s].gety() - dof.getAngle(1)),
 					0.0f
 					)
@@ -143,6 +168,31 @@ class agent{
 			}
 
 	}
+
+
+	void copyGene(agent parent){
+		this.gene = parent.gene;
+		this.SOG.copytracks(parent.SOG);
+	}
+
+
+	void checkSOG(){
+
+		writeln("check SOG");
+		foreach(string s, dof; g6dofs){
+			if(s=="Constraint"){
+				writeln(s);
+				for(int i=0; i<SOG.lengthOfSet; i++){
+					write("\t", i, " : (");
+					write(SOG.tracks[i][s].getx(), ", ");
+					write(SOG.tracks[i][s].gety(), ", ");
+					writeln(SOG.tracks[i][s].getz(), " )");
+				}
+			}
+		}
+
+	}
+
 
 
 	void moveWithOsci(){
@@ -164,11 +214,7 @@ class agent{
 	}
 
 
-	void despawn(){
-		foreach(part; parts) part.destroy();
-		foreach(hinge; hinges) hinge.destroy();
-		foreach(dofs; g6dofs) dofs.destroy();
-	}
+
 
 
 }
