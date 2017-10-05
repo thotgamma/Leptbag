@@ -81,14 +81,58 @@ struct serialOrderGene{
 	void init(string s, vec3 lowerLimit, vec3 upperLimit){
 		auto rnd = Random(unpredictableSeed);
 		for(int i=0; i<lengthOfSet; i++){
-			tracks[i][s] = createVec3( uniform(lowerLimit.getx(), upperLimit.getx(), rnd), uniform(lowerLimit.gety(), upperLimit.gety(), rnd), uniform(lowerLimit.getz(), upperLimit.getz(), rnd) );
+
+			float x, y, z;
+			if(lowerLimit.getx()<upperLimit.getx()){
+				x = uniform(lowerLimit.getx(), upperLimit.getx(), rnd);
+			}else{
+				x = 0.0f;
+			}
+
+			if(lowerLimit.gety()<upperLimit.gety()){
+				y = uniform(lowerLimit.gety(), upperLimit.gety(), rnd);
+			}else{
+				y = 0.0f;
+			}
+
+			if(lowerLimit.getz()<upperLimit.getz()){
+				z = uniform(lowerLimit.getz(), upperLimit.getz(), rnd);
+			}else{
+				z = 0.0f;
+			}
+
+			tracks[i][s] = createVec3(x, y, z);
 			//write(s, ":", i, "(", tracks[i][s].getx(), ", ", tracks[i][s].gety(), ")");
 		}
 	}
 
 	void init(int i, string s, vec3 lowerLimit, vec3 upperLimit){
+		writeln("buma");
 		auto rnd = Random(unpredictableSeed);
-		tracks[i][s] = createVec3( uniform(lowerLimit.getx(), upperLimit.getx(), rnd), uniform(lowerLimit.gety(), upperLimit.gety(), rnd), uniform(lowerLimit.getz(), upperLimit.getz(), rnd) );
+
+			float x, y, z;
+			if(lowerLimit.getx()<upperLimit.getx()){
+				x = uniform(lowerLimit.getx(), upperLimit.getx(), rnd);
+			}else{
+				x = 0.0f;
+			}
+
+			if(lowerLimit.gety()<upperLimit.gety()){
+				y = uniform(lowerLimit.gety(), upperLimit.gety(), rnd);
+			}else{
+				y = 0.0f;
+			}
+
+			if(lowerLimit.getz()<upperLimit.getz()){
+				z = uniform(lowerLimit.getz(), upperLimit.getz(), rnd);
+			}else{
+				z = 0.0f;
+			}
+
+			writeln(x, ", ", y, ", ", z);
+
+			tracks[i][s] = createVec3(x, y, z);
+
 	}
 
 

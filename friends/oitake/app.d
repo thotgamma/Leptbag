@@ -60,6 +60,8 @@ extern (C) void init(){
 		elem = new agent(to!float(i)*personalSpace, 0.0f, -1.0f, info);
 	}
 
+	//agents[0].checkSOG();
+
 	for(int i=0; i<agentNum; i++){
 		for(int j=1; j<averageOf; j++){
 			agents[agentNum*j+i].copyGene(agents[i]);

@@ -49,10 +49,12 @@ class agent{
 		spawn(createVec3(x, y, z));
 		SOG.init();
 		gene.init();
+
 		foreach(string s, dof; g6dofs){
 			SOG.init(s, this.bodyInformation.g6dofParams[s].angLimitLower, this.bodyInformation.g6dofParams[s].angLimitUpper);
 			gene.init(s);
 		}
+
 		gene.rehash();
 
 	}
@@ -163,8 +165,8 @@ class agent{
 			foreach(string s, dof; g6dofs){
 				dof.setRotationalTargetVelocity( createVec3(
 					5.0*(SOG.tracks[sequence][s].getx() - dof.getAngle(0)),
-					0.0f, //10.0*(SOG.tracks[sequence][s].gety() - dof.getAngle(1)),
-					0.0f
+					5.0*(SOG.tracks[sequence][s].gety() - dof.getAngle(1)),
+					5.0*(SOG.tracks[sequence][s].getz() - dof.getAngle(2))
 					)
 				);
 			}
