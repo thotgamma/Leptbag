@@ -78,17 +78,17 @@ struct serialOrderGene{
 
 	void init(){}
 
-	void init(string s){
+	void init(string s, vec3 lowerLimit, vec3 upperLimit){
 		auto rnd = Random(unpredictableSeed);
 		for(int i=0; i<lengthOfSet; i++){
-			tracks[i][s] = createVec3( uniform(-1.57f/2.0f, 1.57f/2.0f, rnd), uniform(-1.57f/2.0f, 1.57f/2.0f, rnd), 0.0f );
+			tracks[i][s] = createVec3( uniform(lowerLimit.getx(), upperLimit.getx(), rnd), uniform(lowerLimit.gety(), upperLimit.gety(), rnd), uniform(lowerLimit.getz(), upperLimit.getz(), rnd) );
 			//write(s, ":", i, "(", tracks[i][s].getx(), ", ", tracks[i][s].gety(), ")");
 		}
 	}
 
-	void init(int i, string s){
+	void init(int i, string s, vec3 lowerLimit, vec3 upperLimit){
 		auto rnd = Random(unpredictableSeed);
-		tracks[i][s] = createVec3( uniform(-1.57f/2.0f, 1.57f/2.0f, rnd), uniform(-1.57f/2.0f, 1.57f/2.0f, rnd), 0.0f );
+		tracks[i][s] = createVec3( uniform(lowerLimit.getx(), upperLimit.getx(), rnd), uniform(lowerLimit.gety(), upperLimit.gety(), rnd), uniform(lowerLimit.getz(), upperLimit.getz(), rnd) );
 	}
 
 

@@ -37,20 +37,20 @@ class agent{
 	generic6DofConstraint[string] g6dofs;
 	serialOrderGene SOG;
 	oscillator2Gene gene; //振動子モデル+DEにおける遺伝子
-	agentBodyParameter bodyInfomation;
+	agentBodyParameter bodyInformation;
 
 
 	this(float x, float y, float z, agentBodyParameter info){
 
-		this.bodyInfomation = info;
-		foreach(string name, params;bodyInfomation.partParams){
-			bodyInfomation.partsGenerator[name] = createElementManager(bodyInfomation.partParams[name].vertices, &createConvexHullShapeBody);
+		this.bodyInformation = info;
+		foreach(string name, params;bodyInformation.partParams){
+			bodyInformation.partsGenerator[name] = createElementManager(bodyInformation.partParams[name].vertices, &createConvexHullShapeBody);
 		}
 		spawn(createVec3(x, y, z));
 		SOG.init();
 		gene.init();
 		foreach(string s, dof; g6dofs){
-			SOG.init(s);
+			SOG.init(s, this.bodyInformation.g6dofParams[s].angLimitLower, this.bodyInformation.g6dofParams[s].angLimitUpper);
 			gene.init(s);
 		}
 		gene.rehash();
@@ -61,37 +61,37 @@ class agent{
 
 
 		//身体パーツ
-		foreach(string s, partsGen; bodyInfomation.partsGenerator){
+		foreach(string s, partsGen; bodyInformation.partsGenerator){
 
 			parts[s] = partsGen.generate(paramWrap(
-						param("position", addVec(bodyInfomation.partParams[s].position, position)),
-						param("scale",    bodyInfomation.partParams[s].scale),
-						param("rotation", bodyInfomation.partParams[s].rotation),
-						param("model",    bodyInfomation.partParams[s].vertices),
+						param("position", addVec(bodyInformation.partParams[s].position, position)),
+						param("scale",    bodyInformation.partParams[s].scale),
+						param("rotation", bodyInformation.partParams[s].rotation),
+						param("model",    bodyInformation.partParams[s].vertices),
 						param("mass",
-						bodyInfomation.partParams[s].mass * bodyMass)));
+						bodyInformation.partParams[s].mass * bodyMass)));
 						//0.0f)));
 
 		}
 
 
 		//ヒンジ
-		foreach(string s, param; bodyInfomation.hingeParams){
-			hinges[s] = hingeConstraint_create(parts[bodyInfomation.hingeParams[s].object1Name], parts[bodyInfomation.hingeParams[s].object2Name],
-					bodyInfomation.hingeParams[s].object1Position, bodyInfomation.hingeParams[s].object2Position,
-					bodyInfomation.hingeParams[s].axis1, bodyInfomation.hingeParams[s].axis2);
-			hinges[s].setLimit( bodyInfomation.hingeParams[s].limitLower, bodyInfomation.hingeParams[s].limitLower );
-			if( bodyInfomation.hingeParams[s].enabled ){
+		foreach(string s, param; bodyInformation.hingeParams){
+			hinges[s] = hingeConstraint_create(parts[bodyInformation.hingeParams[s].object1Name], parts[bodyInformation.hingeParams[s].object2Name],
+					bodyInformation.hingeParams[s].object1Position, bodyInformation.hingeParams[s].object2Position,
+					bodyInformation.hingeParams[s].axis1, bodyInformation.hingeParams[s].axis2);
+			hinges[s].setLimit( bodyInformation.hingeParams[s].limitLower, bodyInformation.hingeParams[s].limitLower );
+			if( bodyInformation.hingeParams[s].enabled ){
 				hinges[s].enableMotor(true);
 				hinges[s].setMaxMotorImpulse(5);
 			}
 		}
 
 		//6Dof
-		foreach(string s, param; bodyInfomation.g6dofParams){
-			g6dofs[s] = generic6DofConstraint_create(parts[bodyInfomation.g6dofParams[s].object1Name], parts[bodyInfomation.g6dofParams[s].object2Name],
-					bodyInfomation.g6dofParams[s].object1Position, bodyInfomation.g6dofParams[s].object2Position,
-					bodyInfomation.g6dofParams[s].rotation);
+		foreach(string s, param; bodyInformation.g6dofParams){
+			g6dofs[s] = generic6DofConstraint_create(parts[bodyInformation.g6dofParams[s].object1Name], parts[bodyInformation.g6dofParams[s].object2Name],
+					bodyInformation.g6dofParams[s].object1Position, bodyInformation.g6dofParams[s].object2Position,
+					bodyInformation.g6dofParams[s].rotation);
 		}
 
 		parts = parts.rehash;
@@ -108,8 +108,8 @@ class agent{
 
 
 			for(int i=0; i<3; i++){
-				if(bodyInfomation.g6dofParams[s].useAngLimit[i]) g6dofs[s].setRotationalMotor(i);
-				if(bodyInfomation.g6dofParams[s].useLinLimit[i]) g6dofs[s].setLinearMotor(i);
+				if(bodyInformation.g6dofParams[s].useAngLimit[i]) g6dofs[s].setRotationalMotor(i);
+				if(bodyInformation.g6dofParams[s].useLinLimit[i]) g6dofs[s].setLinearMotor(i);
 			}
 
 
@@ -120,18 +120,20 @@ class agent{
 			vec3 zeroVec3 = createVec3( 0.0, 0.0, 0.0 ); //セッターに同じvec3を入れるとロック
 
 			bool useAng = true;
-			for(int i=0; i<bodyInfomation.g6dofParams[s].useAngLimit.length; i++) useAng = useAng && bodyInfomation.g6dofParams[s].useAngLimit[i];
+			for(int i=0; i<bodyInformation.g6dofParams[s].useAngLimit.length; i++) useAng = useAng && bodyInformation.g6dofParams[s].useAngLimit[i];
 			if(useAng){
-				g6dofs[s].setAngularLimit( bodyInfomation.g6dofParams[s].angLimitLower, bodyInfomation.g6dofParams[s].angLimitUpper );
+				g6dofs[s].setAngularLimit(
+						bodyInformation.g6dofParams[s].angLimitLower,
+						bodyInformation.g6dofParams[s].angLimitUpper );
 			}else{
 				g6dofs[s].setAngularLimit( zeroVec3, zeroVec3 );
 			}
 
 
 			bool useLin = true;
-			for(int i=0; i<bodyInfomation.g6dofParams[s].useLinLimit.length; i++) useLin = useLin && bodyInfomation.g6dofParams[s].useLinLimit[i];
+			for(int i=0; i<bodyInformation.g6dofParams[s].useLinLimit.length; i++) useLin = useLin && bodyInformation.g6dofParams[s].useLinLimit[i];
 			if(false){//useLin){
-				g6dofs[s].setLinearLimit( bodyInfomation.g6dofParams[s].linLimitLower, bodyInfomation.g6dofParams[s].linLimitUpper );
+				g6dofs[s].setLinearLimit( bodyInformation.g6dofParams[s].linLimitLower, bodyInformation.g6dofParams[s].linLimitUpper );
 			}else{
 				g6dofs[s].setLinearLimit( zeroVec3, zeroVec3 );
 			}
