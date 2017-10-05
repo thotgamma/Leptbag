@@ -9,7 +9,6 @@ import std.algorithm;
 import japariSDK.japarilib;
 import Oscillator;
 
-Random rnd;
 
 struct agentBodyParameter{
 	elementManager[string] partsGenerator;
@@ -72,6 +71,87 @@ struct g6dofParam{
 }
 
 //遺伝させるパラメータ
+
+struct serialOrderGene{
+	const uint lengthOfSet = 20;
+	vec3[string][lengthOfSet] tracks;
+
+	void init(){}
+
+	void init(string s, vec3 lowerLimit, vec3 upperLimit){
+		auto rnd = Random(unpredictableSeed);
+		for(int i=0; i<lengthOfSet; i++){
+
+			float x, y, z;
+			if(lowerLimit.getx()<upperLimit.getx()){
+				x = uniform(lowerLimit.getx(), upperLimit.getx(), rnd);
+			}else{
+				x = 0.0f;
+			}
+
+			if(lowerLimit.gety()<upperLimit.gety()){
+				y = uniform(lowerLimit.gety(), upperLimit.gety(), rnd);
+			}else{
+				y = 0.0f;
+			}
+
+			if(lowerLimit.getz()<upperLimit.getz()){
+				z = uniform(lowerLimit.getz(), upperLimit.getz(), rnd);
+			}else{
+				z = 0.0f;
+			}
+
+			tracks[i][s] = createVec3(x, y, z);
+			//write(s, ":", i, "(", tracks[i][s].getx(), ", ", tracks[i][s].gety(), ")");
+		}
+	}
+
+	void init(int i, string s, vec3 lowerLimit, vec3 upperLimit){
+		writeln("buma");
+		auto rnd = Random(unpredictableSeed);
+
+			float x, y, z;
+			if(lowerLimit.getx()<upperLimit.getx()){
+				x = uniform(lowerLimit.getx(), upperLimit.getx(), rnd);
+			}else{
+				x = 0.0f;
+			}
+
+			if(lowerLimit.gety()<upperLimit.gety()){
+				y = uniform(lowerLimit.gety(), upperLimit.gety(), rnd);
+			}else{
+				y = 0.0f;
+			}
+
+			if(lowerLimit.getz()<upperLimit.getz()){
+				z = uniform(lowerLimit.getz(), upperLimit.getz(), rnd);
+			}else{
+				z = 0.0f;
+			}
+
+			writeln(x, ", ", y, ", ", z);
+
+			tracks[i][s] = createVec3(x, y, z);
+
+	}
+
+
+	void copytracks(serialOrderGene u){
+		foreach(int i, elem1; this.tracks){
+			foreach(string s, elem2; elem1){
+				this.tracks[i][s] = createVec3( u.tracks[i][s].getx(), u.tracks[i][s].gety(), u.tracks[i][s].getz() );
+			}
+		}
+	}
+
+	void copytracks(serialOrderGene u,int i,string s){
+		this.tracks[i][s] = createVec3( u.tracks[i][s].getx(), u.tracks[i][s].gety(), u.tracks[i][s].getz() );
+	}
+
+
+}
+
+
 struct oscillator2Gene{
 
 	vec3[string] angLimitLower;
@@ -86,13 +166,15 @@ struct oscillator2Gene{
 	void init(){
 		degree = 5;
 		oscil = new oscillator2(degree);
-		friction = uniform(0.0f, 5.0f, rnd);
+		auto rnd = Random(unpredictableSeed);
+		friction = 2.0f;//uniform(0.0f, 5.0f, rnd);
 	}
 
 
 	//各関節で異なるパラメータの初期化
 	//blenderで定義した関節制限角度を用いない場合
 	void init(string s){
+		auto rnd = Random(unpredictableSeed);
 
 		maxForce[s] = createVec3( uniform(0.0f, 10.0f, rnd), uniform(0.0f, 10.0f, rnd), 0.0f );
 		maxVelo[s] = createVec3( uniform(0.0f, 10.0f, rnd), uniform(0.0f, 10.0f, rnd), uniform(0.0f, 10.0f, rnd) );
@@ -108,6 +190,7 @@ struct oscillator2Gene{
 	//関節角度をblenderから読込む場合
 	void init(string s, g6dofParam dofParam){
 
+		auto rnd = Random(unpredictableSeed);
 		maxForce[s] = createVec3( uniform(0.0f, 10.0f, rnd), uniform(0.0f, 10.0f, rnd), 0.0f );
 		maxVelo[s] = createVec3( uniform(0.0f, 10.0f, rnd), uniform(0.0f, 10.0f, rnd), uniform(0.0f, 10.0f, rnd) );
 

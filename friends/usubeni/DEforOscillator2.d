@@ -114,6 +114,7 @@ void evolve(agent[] children, agent[] parents, float Cr, float F){
 
 
 
+
 void evolveBest(agent[] children, agent[] parents, float Cr, float F, int[] bests){
 
 
@@ -126,7 +127,7 @@ void evolveBest(agent[] children, agent[] parents, float Cr, float F, int[] best
 
 		//ランダムに3個体を選ぶ．
 		//そのパラメータ全体(Oscillator2Gene)をベクトルとしてみる．
-		//3つのうち1つのベクトルに，ほか2つのベクトルの差分*Fを加えたベクトルを生成する
+		//3つのうち1つのベクトルに，ほか2つの(ベクトルの差分)*Fを加えたベクトルを生成する
 		//確率Crでそのベクトルの各成分を採用する
 		uint k, l, m;
 		k = bests[0];

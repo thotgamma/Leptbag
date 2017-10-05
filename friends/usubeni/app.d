@@ -40,7 +40,7 @@ extern (C) void init(){
 
 	rt_init();
 	Random(unpredictableSeed);
-	writeln("model:oitake loaded");
+	writeln("model:usubeni loaded");
 
 
 	//jsonからload
@@ -82,7 +82,7 @@ float[] evaluatedsScores; //突然変異群のスコアを管理
 //そのステップ内で行うべき処理を決定するための変数
 int time = 0; //時計
 int timerDivisor = 0; //定期的に実行する処理のためのカウンタ
-const int moveSpan = 8; //timerDivisorがこの値になるごとに上記処理実行
+const int moveSpan = 12; //timerDivisorがこの値になるごとに上記処理実行
 
 const int generationStroke = 0; //一世代毎にgenerationStrokeだけ長い時間の試行を行うようになる
 const int trialSpan = 500; //一試行の長さ
@@ -90,7 +90,7 @@ const int trialSpan = 500; //一試行の長さ
 int sequence = 0;
 int generation = 0; //世代を記録する
 bool evaluation = false; //trueならDEの突然変異体評価フェイズ
-const int orderLength = 4;
+const int orderLength = 8;
 
 extern (C) void tick(){
 

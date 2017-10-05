@@ -1,5 +1,5 @@
 #!/bin/bash
-TARGET="fuji"
+TARGET="usubeni"
 
 cp $TARGET".friends" "../../source/friends/"
 cd ../../source

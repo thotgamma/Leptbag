@@ -6,7 +6,7 @@ import japariSDK.japarilib;
 import params;
 
 
-const string loadmodel = "models/fuji.fpm";
+const string loadmodel = "models/oitake.fpm";
 
 
 
