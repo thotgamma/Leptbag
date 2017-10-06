@@ -40,7 +40,7 @@ extern (C) void init(){
 
 	rt_init();
 	Random(unpredictableSeed);
-	writeln("model:oitake loaded");
+	writeln("start initialization model:oitake");
 
 
 	//jsonからload
@@ -48,6 +48,7 @@ extern (C) void init(){
 	loadHinge(info.hingeParams);
 	loadG6dof(info.g6dofParams);
 
+	writeln("loaded data from .json");
 
 	info.partParams = info.partParams.rehash;
 	info.hingeParams = info.hingeParams.rehash;
@@ -60,6 +61,8 @@ extern (C) void init(){
 		elem = new agent(to!float(i)*personalSpace, 0.0f, -1.0f, info);
 	}
 
+	writeln("made main groups of ", averageOf, "(", agentNum, " agent in each group");
+
 	//agents[0].checkSOG();
 
 	for(int i=0; i<agentNum; i++){
@@ -68,6 +71,9 @@ extern (C) void init(){
 		}
 	}
 
+	writeln("shared gene among main groups");
+
+	writeln("start simulation");
 
 }
 
@@ -82,35 +88,34 @@ float[] evaluatedsScores; //突然変異群のスコアを管理
 //そのステップ内で行うべき処理を決定するための変数
 int time = 0; //時計
 int timerDivisor = 0; //定期的に実行する処理のためのカウンタ
-const int moveSpan = 8; //timerDivisorがこの値になるごとに上記処理実行
+const int moveSpan = 12; //timerDivisorがこの値になるごとに上記処理実行
 
 const int generationStroke = 0; //一世代毎にgenerationStrokeだけ長い時間の試行を行うようになる
 const int trialSpan = 500; //一試行の長さ
 
-int sequence = 0;
 int generation = 0; //世代を記録する
 bool evaluation = false; //trueならDEの突然変異体評価フェイズ
-const int orderLength = 4;
+float Cr = 0.5f; //Crの確率で親の遺伝子を引き継ぐ
+float coinForRandomMutation = 0.3f; //(1.0-Cr)*coinForRandomMutationの確率で遺伝子要素がランダムに突然変異．
 
 extern (C) void tick(){
 
+	if(time==0) write("progress:");
+	else if(time%(trialSpan/9)==0) write("#");
 
 	time++;
 
-	//運動する
-	if(timerDivisor%2==0){
+	if(time%2==0){
+		timerDivisor++;
+		//運動する
 		moveAgents();
 	}
 
-	//運動命令変化
-	if(++timerDivisor == moveSpan){
-		timerDivisor = 0;
-		regularProcess();
-	}
 
 	//一世代終了
-	if(time == (trialSpan + generation*generationStroke)){
+	if( time == (trialSpan + generation*generationStroke) ){
 
+		writeln();
 		/+
 		if(!evaluation){
 			writeln(agents[0].parts[measuredPart].getZpos());
@@ -136,17 +141,22 @@ extern (C) void tick(){
 
 void moveAgents(){
 
-	//writeln(sequence);
-	if(!evaluation) foreach(elem; agents) elem.moveWithSerialOrder(sequence);
-	else foreach(elem; evaluateds) elem.moveWithSerialOrder(sequence);
+	//writeln(seq);
+	if(!evaluation){
+		foreach(elem; agents){
+			elem.moveWithSerialOrder();
+			elem.updateBiologicalClock();
+		}
+	}else{
+		foreach(elem; evaluateds){
+			elem.moveWithSerialOrder();
+			elem.updateBiologicalClock();
+		}
+	}
+
 }
 
 
-//定期的に実行する処理
-void regularProcess(){
-	//writeln(sequence);
-	sequence = (sequence+1)%orderLength;
-}
 
 
 
@@ -155,7 +165,6 @@ void regularProcess(){
 void terminateTrial(){
 
 
-	sequence = 0;
 
 	float proScoreTmp = 0.0f; //この世代の最高移動距離
 	float[averageOf] averageScore = 0.0f;
@@ -261,9 +270,6 @@ void terminateTrial(){
 	}
 
 
-
-
-
 	//最高記録が出たら記録，表示
 	if(proScoreTmp<topScore){
 		topScore = proScoreTmp;
@@ -337,18 +343,22 @@ void terminateGeneration(){
 				elem.copyGene(agents[i]);
 			}
 
+			writeln("made groups for evaluation to mutation");
+
 			//DEに用いるパラメータ
 			auto rnd = Random(unpredictableSeed);
 			float ditherF = uniform(0.5f, 1.0f, rnd);
 			//突然変異
 			//evolveBest(evaluateds[0..agentNum], agents[0..agentNum], 0.1f, ditherF, bests);
-			evolveSOG(evaluateds[0..agentNum], agents[0..agentNum], 0.3f, 0.9f, ditherF, bests);
+			evolveSOG(agentNum, evaluateds[0..agentNum], agents[0..agentNum], coinForRandomMutation, Cr, ditherF, bests);
 
 			for(int i=0; i<agentNum; i++){
 				for(int j=1; j<averageOf; j++){
 					evaluateds[agentNum*j+i].copyGene(evaluateds[i]);
 				}
 			}
+
+			writeln("copied gene of main group to group for evaluation");
 
 		}else{ //1世代以降
 
@@ -380,7 +390,7 @@ void terminateGeneration(){
 			}
 			+/
 
-			evolveSOG(evaluateds[0..agentNum], agents[0..agentNum], 0.3f, 0.9f, ditherF, bests);
+			evolveSOG(agentNum, evaluateds[0..agentNum], agents[0..agentNum], coinForRandomMutation, Cr, ditherF, bests);
 
 			/+
 			writeln("after evolution");
@@ -411,7 +421,7 @@ void terminateGeneration(){
 		writeln("child");
 		foreach(string s, dof; evaluateds[0].g6dofs){
 			write(s, " ( ");
-			for(uint i=0; i<evaluateds[0].SOG.lengthOfSet; i++){
+			for(uint i=0; i<evaluateds[0].SOG.tracks.length; i++){
 				write(i, ": ", evaluateds[0].SOG.tracks[i][s].getx(), ", ");
 			}
 			writeln(")");
@@ -419,7 +429,7 @@ void terminateGeneration(){
 
 		foreach(string s, dof; agents[0].g6dofs){
 			write(s, " ( ");
-			for(uint i=0; i<agents[0].SOG.lengthOfSet; i++){
+			for(uint i=0; i<agents[0].SOG.tracks.length; i++){
 				write(i, ":", agents[bests[0]].SOG.tracks[i][s].getx(), ", ");
 			}
 			writeln(")");
@@ -427,7 +437,7 @@ void terminateGeneration(){
 
 		foreach(string s, dof; agents[0].g6dofs){
 			write(s, " ( ");
-			for(uint i=0; i<agents[0].SOG.lengthOfSet; i++){
+			for(uint i=0; i<agents[0].SOG.tracks.length; i++){
 				write(i, ":", agents[bests[1]].SOG.tracks[i][s].getx(), ", ");
 			}
 			writeln(")");
@@ -478,9 +488,6 @@ void terminateGeneration(){
 		evaluation = false; //次は採用した突然変異体を混ぜて性能評価
 
 	}
-
-
-
 
 
 }

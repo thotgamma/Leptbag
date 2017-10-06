@@ -38,9 +38,11 @@ class agent{
 	serialOrderGene SOG;
 	oscillator2Gene gene; //振動子モデル+DEにおける遺伝子
 	agentBodyParameter bodyInformation;
-
+	int sequenceOfOrder; //SOG.tracksのsequenceOfOrder番目の命令を動作に用いる
+	int biologicalClock; //現在のsequenceOfOrderになってからどのくらい時間が経ったか
 
 	this(float x, float y, float z, agentBodyParameter info){
+
 
 		this.bodyInformation = info;
 		foreach(string name, params;bodyInformation.partParams){
@@ -59,8 +61,11 @@ class agent{
 
 	}
 
+
 	void spawn(vec3 position){
 
+		this.sequenceOfOrder = 0;
+		this.biologicalClock = 0;
 
 		//身体パーツ
 		foreach(string s, partsGen; bodyInformation.partsGenerator){
@@ -102,12 +107,10 @@ class agent{
 
 
 
-		foreach(part; parts) part.setFriction(3.5);
+		foreach(part; parts) part.setFriction(this.SOG.friction);
 
 
 		foreach(string s, dof; g6dofs){
-
-
 
 			for(int i=0; i<3; i++){
 				if(bodyInformation.g6dofParams[s].useAngLimit[i]) g6dofs[s].setRotationalMotor(i);
@@ -141,9 +144,9 @@ class agent{
 			}
 
 			//最大出力．index ; (x, y, z)=(0, 1, 2)(たぶん？)
-			g6dofs[s].setMaxRotationalMotorForce( 0, 10.0); //gene.maxForce[s].getx() );
-			g6dofs[s].setMaxRotationalMotorForce( 1, 10.0); //gene.maxForce[s].gety() );
-			g6dofs[s].setMaxRotationalMotorForce( 2, 10.0); //gene.maxForce[s].getz() );
+			g6dofs[s].setMaxRotationalMotorForce( 0, this.SOG.maxRotationalMotorForce); //gene.maxForce[s].getx() );
+			g6dofs[s].setMaxRotationalMotorForce( 1, this.SOG.maxRotationalMotorForce); //gene.maxForce[s].gety() );
+			g6dofs[s].setMaxRotationalMotorForce( 2, this.SOG.maxRotationalMotorForce); //gene.maxForce[s].getz() );
 
 
 		}
@@ -159,19 +162,6 @@ class agent{
 		foreach(dofs; g6dofs) dofs.destroy();
 	}
 
-	void moveWithSerialOrder(int sequence){
-
-		if(g6dofs.length!=0)
-			foreach(string s, dof; g6dofs){
-				dof.setRotationalTargetVelocity( createVec3(
-					5.0*(SOG.tracks[sequence][s].getx() - dof.getAngle(0)),
-					5.0*(SOG.tracks[sequence][s].gety() - dof.getAngle(1)),
-					5.0*(SOG.tracks[sequence][s].getz() - dof.getAngle(2))
-					)
-				);
-			}
-
-	}
 
 
 	void copyGene(agent parent){
@@ -186,7 +176,7 @@ class agent{
 		foreach(string s, dof; g6dofs){
 			if(s=="Constraint"){
 				writeln(s);
-				for(int i=0; i<SOG.lengthOfSet; i++){
+				for(int i=0; i<SOG.tracks.length; i++){
 					write("\t", i, " : (");
 					write(SOG.tracks[i][s].getx(), ", ");
 					write(SOG.tracks[i][s].gety(), ", ");
@@ -197,6 +187,41 @@ class agent{
 
 	}
 
+
+	void updateBiologicalClock(){
+		if(++this.biologicalClock==this.SOG.moveSpan[this.sequenceOfOrder]){
+			this.sequenceOfOrder = (++this.sequenceOfOrder)%serialOrderGene.lengthOfSet;
+			this.biologicalClock = 0;
+		}
+	}
+
+
+	void moveWithSerialOrder(){
+
+		if(g6dofs.length==0) return;
+
+		/*
+		writeln("wavelengthOfOrder.length:", this.SOG.wavelengthOfOrder.length, "\nsequenceOfOrder:", sequenceOfOrder, "\nbiologicalClock:", biologicalClock, "\nmoveSpan.length:", this.SOG.moveSpan.length);
+		writeln("moveSpan:", this.SOG.moveSpan);
+		writeln("wavelengthOfOrder:", this.SOG.wavelengthOfOrder);
+		*/
+
+		if(!this.SOG.wavelengthOfOrder[sequenceOfOrder][biologicalClock]) return;
+
+		foreach(string s, dof; g6dofs){
+			dof.setRotationalTargetVelocity(
+					createVec3(
+						this.SOG.maxVelocity[sequenceOfOrder][s].getx()
+						*(SOG.tracks[sequenceOfOrder][s].getx() - dof.getAngle(0)),
+						this.SOG.maxVelocity[sequenceOfOrder][s].gety()
+						*(SOG.tracks[sequenceOfOrder][s].gety() - dof.getAngle(1)),
+						this.SOG.maxVelocity[sequenceOfOrder][s].getz()
+						*(SOG.tracks[sequenceOfOrder][s].getz() - dof.getAngle(2))
+						)
+					);
+		}
+
+	}
 
 
 	void moveWithOsci(){

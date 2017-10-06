@@ -70,16 +70,50 @@ struct g6dofParam{
 
 }
 
+
 //遺伝させるパラメータ
-
 struct serialOrderGene{
-	const uint lengthOfSet = 20;
-	vec3[string][lengthOfSet] tracks;
 
-	void init(){}
+	static uint lengthOfSet = 8;
+	vec3[string][] tracks;
+	bool[][] wavelengthOfOrder;
+	int[] moveSpan;
+	float friction;
+	float maxRotationalMotorForce;
+	vec3[string][] maxVelocity;
+
+	void init(){
+
+		auto rnd = Random(unpredictableSeed);
+
+		tracks.length = lengthOfSet;
+		moveSpan.length = lengthOfSet;
+		maxVelocity.length = lengthOfSet;
+
+		friction = uniform(0.1f, 8.0f, rnd);
+		maxRotationalMotorForce = uniform(0.0f, 30.0f, rnd);
+
+		for(int i=0; i<moveSpan.length; i++) moveSpan[i] = uniform(1, 10, rnd);
+
+		wavelengthOfOrder.length = lengthOfSet;
+		for(int i=0; i<wavelengthOfOrder.length; i++){
+
+			wavelengthOfOrder[i].length = moveSpan[i];
+
+			for(int j=0; j<wavelengthOfOrder[i].length; j++){
+				if(uniform(0.0f, 1.0f, rnd) < 0.5f) wavelengthOfOrder[i][j] = true;
+				else wavelengthOfOrder[i][j] = false;
+			}
+
+		}
+
+	}
+
 
 	void init(string s, vec3 lowerLimit, vec3 upperLimit){
+
 		auto rnd = Random(unpredictableSeed);
+
 		for(int i=0; i<lengthOfSet; i++){
 
 			float x, y, z;
@@ -104,10 +138,35 @@ struct serialOrderGene{
 			tracks[i][s] = createVec3(x, y, z);
 			//write(s, ":", i, "(", tracks[i][s].getx(), ", ", tracks[i][s].gety(), ")");
 		}
+
+		for(int i=0; i<lengthOfSet; i++){
+
+			float x, y, z;
+			if(lowerLimit.getx()<upperLimit.getx()){
+				x = uniform(0.0f, 20.0f, rnd);
+			}else{
+				x = 0.0f;
+			}
+
+			if(lowerLimit.gety()<upperLimit.gety()){
+				y = uniform(0.0f, 20.0f, rnd);
+			}else{
+				y = 0.0f;
+			}
+
+			if(lowerLimit.getz()<upperLimit.getz()){
+				z = uniform(0.0f, 20.0f, rnd);
+			}else{
+				z = 0.0f;
+			}
+
+			maxVelocity[i][s] = createVec3(x, y, z);
+			//write(s, ":", i, "(", tracks[i][s].getx(), ", ", tracks[i][s].gety(), ")");
+		}
+
 	}
 
 	void init(int i, string s, vec3 lowerLimit, vec3 upperLimit){
-		writeln("buma");
 		auto rnd = Random(unpredictableSeed);
 
 			float x, y, z;
@@ -128,8 +187,6 @@ struct serialOrderGene{
 			}else{
 				z = 0.0f;
 			}
-
-			writeln(x, ", ", y, ", ", z);
 
 			tracks[i][s] = createVec3(x, y, z);
 

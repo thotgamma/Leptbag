@@ -24,7 +24,7 @@ void simpleSOG(agent[] children, agent[] parents, float Cr, float F, int[] bests
 	foreach(int j, child; children){
 
 		foreach(string s, dof; child.g6dofs){
-			for(uint i=0; i<child.SOG.lengthOfSet; i++){
+			for(uint i=0; i<child.SOG.tracks.length; i++){
 
 				float coin = uniform(0.0f, 1.0f, rnd);
 				//if((j==0)&&(s=="Constraint")) writeln("no. ", i , " : coin is ", coin);
@@ -70,18 +70,58 @@ void simpleSOG(agent[] children, agent[] parents, float Cr, float F, int[] bests
 }
 
 
-void evolveSOG(agent[] children, agent[] parents, float coin, float Cr, float F, int[] bests){
+void evolveSOG(int agentNum, agent[] children, agent[] parents, float coin, float Cr, float F){
 
 	auto rnd = Random(unpredictableSeed);
 
 	foreach(int j, child; children){
 
-		int k = bests[0];
-		int l = bests[1];
-		int m = bests[2];
 
 		foreach(string s, dof; child.g6dofs){
-			for(uint i=0; i<child.SOG.lengthOfSet; i++){
+			for(uint i=0; i<child.SOG.tracks.length; i++){
+
+				int k = uniform(0, agentNum, rnd);
+				int l = uniform(0, agentNum, rnd);
+				int m = uniform(0, agentNum, rnd);
+
+				if(Cr > uniform(0.0f, 1.0f, rnd)){
+
+					child.SOG.tracks[i][s] = createVec3(
+							parents[k].SOG.tracks[i][s].getx() + F * ( parents[m].SOG.tracks[i][s].getx() - parents[l].SOG.tracks[i][s].getx() ),
+							parents[k].SOG.tracks[i][s].gety() + F * ( parents[m].SOG.tracks[i][s].gety() - parents[l].SOG.tracks[i][s].gety() ),
+							parents[k].SOG.tracks[i][s].getz() + F * ( parents[m].SOG.tracks[i][s].getz() - parents[l].SOG.tracks[i][s].getz() )
+							);
+
+				}else{
+
+					if(coin > uniform(0.0f, 1.0f, rnd)){
+						child.SOG.init(s, child.bodyInformation.g6dofParams[s].angLimitLower, child.bodyInformation.g6dofParams[s].angLimitUpper);
+					}else{
+						child.SOG.tracks[i][s] = parents[j].SOG.tracks[i][s];
+					}
+
+				}
+
+			}
+		}
+
+	}
+
+}
+
+
+void evolveSOG(int agentNum, agent[] children, agent[] parents, float coin, float Cr, float F, int[] bests){
+
+	auto rnd = Random(unpredictableSeed);
+
+	int k = bests[0];
+	int l = bests[1];
+	int m = bests[2];
+
+	foreach(int j, child; children){
+
+		foreach(string s, dof; child.g6dofs){
+			for(uint i=0; i<child.SOG.tracks.length; i++){
 
 				if(Cr > uniform(0.0f, 1.0f, rnd)){
 
@@ -116,7 +156,7 @@ void evolveSOG(agent[] children, agent[] parents, float coin, float Cr, float F,
 			writeln("child");
 			foreach(string s, dof; child.g6dofs){
 				write(s, " ( ");
-				for(uint i=0; i<child.SOG.lengthOfSet; i++){
+				for(uint i=0; i<child.SOG.tracks.length; i++){
 					write(i, ": ", child.SOG.tracks[i][s].getx(), ", ");
 				}
 				writeln(")");
@@ -125,7 +165,7 @@ void evolveSOG(agent[] children, agent[] parents, float coin, float Cr, float F,
 			writeln("1");
 			foreach(string s, dof; child.g6dofs){
 				write(s, " ( ");
-				for(uint i=0; i<child.SOG.lengthOfSet; i++){
+				for(uint i=0; i<child.SOG.tracks.length; i++){
 					write(i, ":", parents[k].SOG.tracks[i][s].getx(), ", ");
 				}
 				writeln(")");
@@ -134,7 +174,7 @@ void evolveSOG(agent[] children, agent[] parents, float coin, float Cr, float F,
 			writeln("2");
 			foreach(string s, dof; child.g6dofs){
 				write(s, " ( ");
-				for(uint i=0; i<child.SOG.lengthOfSet; i++){
+				for(uint i=0; i<child.SOG.tracks.length; i++){
 					write(i, ":", parents[l].SOG.tracks[i][s].getx(), ", ");
 				}
 				writeln(")");
