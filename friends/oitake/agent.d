@@ -46,18 +46,18 @@ class agent{
 
 		this.bodyInformation = info;
 		foreach(string name, params;bodyInformation.partParams){
-			bodyInformation.partsGenerator[name] = createElementManager(bodyInformation.partParams[name].vertices, &createConvexHullShapeBody);
+			this.bodyInformation.partsGenerator[name] = createElementManager(this.bodyInformation.partParams[name].vertices, &createConvexHullShapeBody);
 		}
-		spawn(createVec3(x, y, z));
-		SOG.init();
-		gene.init();
+		this.spawn(createVec3(x, y, z));
+		this.SOG.init();
+		this.gene.init();
 
 		foreach(string s, dof; g6dofs){
-			SOG.init(s, this.bodyInformation.g6dofParams[s].angLimitLower, this.bodyInformation.g6dofParams[s].angLimitUpper);
-			gene.init(s);
+			this.SOG.init(s, this.bodyInformation.g6dofParams[s].angLimitLower, this.bodyInformation.g6dofParams[s].angLimitUpper);
+			this.gene.init(s);
 		}
 
-		gene.rehash();
+		this.gene.rehash();
 
 	}
 

@@ -57,9 +57,8 @@ extern (C) void init(){
 
 	//agents生成
 	agents.length = agentNum*averageOf;
-	foreach(int i, ref elem; agents){
-		elem = new agent(to!float(i)*personalSpace, 0.0f, -1.0f, info);
-	}
+
+	prepareAgentsGroup(agents, info);
 
 	writeln("made main groups of ", averageOf, "(", agentNum, " agent in each group");
 
@@ -77,6 +76,14 @@ extern (C) void init(){
 
 }
 
+void prepareAgentsGroup(agent[] group, agentBodyParameter infomation){
+
+	//group.length = agentNum*averageOf;
+	foreach(int i, ref elem; group){
+		elem = new agent(to!float(i)*personalSpace, 0.0f, -1.0f, info);
+	}
+
+}
 
 
 //毎ステップ実行される--------------------
@@ -100,8 +107,11 @@ float coinForRandomMutation = 0.3f; //(1.0-Cr)*coinForRandomMutationの確率で
 
 extern (C) void tick(){
 
-	if(time==0) write("progress:");
-	else if(time%(trialSpan/9)==0) write("#");
+	if(time==0){
+		write("progress:");
+	}
+	if(time%(trialSpan/9)==0){ write("#"); }
+	
 
 	time++;
 
@@ -165,9 +175,10 @@ void moveAgents(){
 void terminateTrial(){
 
 
-
 	float proScoreTmp = 0.0f; //この世代の最高移動距離
-	float[averageOf] averageScore = 0.0f;
+	float[] averageScore;
+	averageScore.length = averageOf;
+	averageScore[] = 0.0f;
 
 	if(generation==0){
 		preScores.length = agentNum*averageOf;
@@ -198,25 +209,8 @@ void terminateTrial(){
 			proScoreTmp = min( elem.parts[measuredPart].getZpos(), proScoreTmp );
 
 
-			/+
-			//初期位置に戻る
-			elem.despawn();
-			elem.spawn(createVec3(to!float(i)*personalSpace, 0.0f, 0.0f));
-			+/
-
 		}
-		/+
-		writeln(averageScore);
 
-		averageScore = 0.0f;
-		writeln(preScores);
-		for(int k=0; k<averageOf; k++){
-			for(int j=0; j<agentNum; j++){
-				averageScore[k] += preScores[k*agentNum + j];
-			}
-		}
-		writeln(averageScore);
-		+/
 
 	}else{ //突然変異体評価フェイズ
 
@@ -236,47 +230,36 @@ void terminateTrial(){
 			proScoreTmp = min( elem.parts[measuredPart].getZpos(), proScoreTmp );
 
 
-			/+
-			//初期位置に戻る
-			elem.despawn();
-			elem.spawn(createVec3(to!float(i)*personalSpace, 0.0f, 0.0f));
-			+/
-
 		}
-		/+
-		writeln(averageScore);
-
-		averageScore = 0.0f;
-		writeln(preScores);
-		for(int k=0; k<averageOf; k++){
-			for(int j=0; j<agentNum; j++){
-				averageScore[k] += evaluatedsScores[k*agentNum + j];
-			}
-		}
-		writeln(averageScore);
-		+/
 
 	}
 
+	displayGenerationResult(proScoreTmp, averageScore);
+	terminateGeneration();
+
+}
+
+//今世代の結果を表示
+void displayGenerationResult(float proscoretmp, float[] averagescore){
+
 	//今回の世代の最高記録
-	writeln("		top score of this generation : ", -1.0f*proScoreTmp);
+	writeln("		top score of this generation : ", -1.0f*proscoretmp);
 
 	for(int k=0; k<averageOf; k++){
 
 		writeln("\n>		trial ", k, ":\n");
 		//今試行の平均移動距離を表示
-		writeln("			average score : ", -1.0f*averageScore[k]/to!float(agentNum));
+		writeln("			average score : ", -1.0f*averagescore[k]/to!float(agentNum));
 
 	}
 
 
 	//最高記録が出たら記録，表示
-	if(proScoreTmp<topScore){
-		topScore = proScoreTmp;
+	if(proscoretmp<topScore){
+		topScore = proscoretmp;
 		writeln("!			top score ever! : ", -1.0f*topScore);
 	}
 
-	terminateGeneration();
 
 }
 
