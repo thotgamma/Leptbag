@@ -20,7 +20,7 @@
 #include <bullet/btBulletDynamicsCommon.h>
 
 
-#include "vertexmanager.hpp"
+#include "vertexManager.hpp"
 #include "shader.hpp"
 #include "constraints.hpp"
 #include "utilities/utilities.hpp"
@@ -323,7 +323,7 @@ int main(){
 
 
 	// Create and compile our GLSL program from the shaders
-	GLuint programID = LoadShaders( "TransformVertexShader.vertexshader", "ColorFragmentShader.fragmentshader" );
+	GLuint programID = LoadShaders( "main.vert", "main.frag" );
 	// Get a handle for our "MVP" uniform
 	uniform_viewMatrix = glGetUniformLocation(programID, "V");
 	uniform_projectionMatrix = glGetUniformLocation(programID, "P");
@@ -354,24 +354,15 @@ int main(){
 	initVBO();
 
 
-	//<Test Code>
-
-
-	//getCubeshape().generate(paramWrap(param("position",vec3(0, 0, 0)), param("scale", vec3(1, 1, 1)), param("rotation", quat(1, 0, 0, 0)), param("mass", 1)));
-	//getPlaneshape().generate(paramWrap(param("position",vec3(0, 0, 0)), param("scale", vec3(1, 1, 1)), param("face", vec3(0, 1, 0)), param("rotation", quat(1, 0, 0, 0)), param("mass", 0)));
+	initPrimitives();
 
 
 
-	//<\Test Code>
+	std::vector<void*> dllList;
 
-
-
-	void *lh;
 	const char* path = "./friends/";
 	DIR *dp;       // ディレクトリへのポインタ
 	dirent* entry; // readdir() で返されるエントリーポイント
-
-	std::string hoge;
 
 	dp = opendir(path);
 	if (dp==NULL) exit(1);
@@ -380,7 +371,7 @@ int main(){
 		std::string filename(entry->d_name);
 		if(split(filename,'.').size() >= 2 && split(filename, '.')[1] == "friends"){
 
-			lh = dlopen((path + filename).c_str(), RTLD_LAZY);
+			void* lh = dlopen((path + filename).c_str(), RTLD_LAZY);
 			if (!lh) {
 				fprintf(stderr, "dlopen error: %s\n", dlerror());
 				exit(1);
@@ -402,6 +393,7 @@ int main(){
 			}
 			pluginTickVector.push_back(*pluginTick);
 
+			dllList.push_back(lh);
 
 
 		}
@@ -414,13 +406,6 @@ int main(){
 		(elem)();
 	}
 
-
-	int maxSerializeBufferSize = 1024*1024*5;
-	btDefaultSerializer* serializer = new btDefaultSerializer(maxSerializeBufferSize);
-	dynamicsWorld->serialize(serializer);
-	FILE* file = fopen("testFile.bullet","wb");
-	fwrite(serializer->getBufferPointer(),serializer->getCurrentBufferSize(),1, file);
-	fclose(file);
 
 
 	glEnableVertexAttribArray(0);
@@ -464,14 +449,6 @@ int main(){
 		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(vertex), (void*)(sizeof(GLfloat)*3));
 		glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(vertex), (void*)(sizeof(GLfloat)*6));
 
-		//cubeshape::render();
-		//floorshape::render();
-
-		/*
-		for(auto elem: commonshapeList){
-			elem->render();
-		}
-		*/
 
 		for(auto elem: elementManager::elementManagerList){
 			elem->render();
@@ -480,6 +457,8 @@ int main(){
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}
+
+	std::cout << "stopping program..." << std::endl;
 
 	glDisableVertexAttribArray(0);
 	glDisableVertexAttribArray(1);
@@ -490,14 +469,30 @@ int main(){
 	glDisableVertexAttribArray(6);
 
 	printf("unloading libdll.so\n");
-	dlclose(lh);
 
+	while(dllList.empty() == false){
+		dlclose(dllList.back());
+		dllList.pop_back();
+	}
+
+
+	while(elementManager::elementManagerList.empty() == false){
+		delete elementManager::elementManagerList.back();
+		elementManager::elementManagerList.pop_back();
+	}
+
+	delete dynamicsWorld;
+	delete solver;
+	delete dispatcher;
+	delete collisionConfiguration;
+	delete broadphase;
 
 	glDeleteVertexArrays(1, &VertexArrayID);
 	glDeleteProgram(programID);
 
 	// Close OpenGL window and terminate GLFW
 	glfwTerminate();
+
 
 
 	return 0;
