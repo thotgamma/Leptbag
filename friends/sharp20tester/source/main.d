@@ -12,18 +12,21 @@ import dlib.math.quaternion;
 
 //ApplicationInterface----------------------
 
-elementNode block;
 int timer;
+elementNode[] blocks;
 
 extern (C) void init() {
 	rt_init();
 	try {
-		block = getCubeShape().generate(parameterPack(
-			param("position", Vector3f( 0, 10, 0)),
-			param("scale",    Vector3f(  1, 1, 1)),
-			param("rotation", Quaternionf(0, 0, 0, 1)),
-			param("mass", 1.0f)));
 
+		blocks.length = 100;
+		foreach(ref elem; blocks){
+			elem = getCubeShape().generate(parameterPack(
+				param("position", Vector3f( 0, 10, 0)),
+				param("scale",    Vector3f(  1, 1, 1)),
+				param("rotation", Quaternionf(0, 0, 0, 1)),
+				param("mass", 1.0f)));
+		}
 
 	} catch (Exception ex){
 		writeln(ex.toString);
@@ -35,13 +38,15 @@ extern (C) void tick() {
 	try {
 
 		if (timer == 10) {
-			block.destroy();
 
-			block = getCubeShape().generate(parameterPack(
-				param("position", Vector3f( 0, 10, 0)),
-				param("scale",    Vector3f(  1, 1, 1)),
-				param("rotation", Quaternionf(0, 0, 0, 1)),
-				param("mass", 1.0f)));
+			foreach(ref elem; blocks){
+				elem.destroy();
+				elem = getCubeShape().generate(parameterPack(
+					param("position", Vector3f( 0, 10, 0)),
+					param("scale",    Vector3f(  1, 1, 1)),
+					param("rotation", Quaternionf(0, 0, 0, 1)),
+					param("mass", 1.0f)));
+			}
 
 			timer = 0;
 		} else {
