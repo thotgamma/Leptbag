@@ -7,13 +7,15 @@ import std.conv;
 import std.algorithm;
 
 import japariSDK.japarilib;
+import dlib.math.vector;
+import dlib.math.quaternion;
+
 import Oscillator;
 
 
 struct agentBodyParameter{
 	elementManager[string] partsGenerator;
 	partParam[string] partParams; //身体パーツのパラメータ
-	hingeParam[string] hingeParams; //ヒンジのパラメータ
 	g6dofParam[string] g6dofParams; //g6dofのパラメータ
 }
 
@@ -21,9 +23,9 @@ struct agentBodyParameter{
 struct partParam{
 
 	vertexManager vertices;
-	vec3 position;
-	vec3 scale;
-	quat rotation;
+	Vector3f position;
+	Vector3f scale;
+	Quaternionf rotation;
 	float mass; //総体重に対する百分率
 	float friction; //摩擦係数
 
@@ -35,13 +37,13 @@ struct partParam{
 struct hingeParam{
 
 	string name;
-	vec3 position;
-	vec3 axis1;
-	vec3 axis2;
+	Vector3f position;
+	Vector3f axis1;
+	Vector3f axis2;
 	string object1Name;
 	string object2Name;
-	vec3 object1Position;
-	vec3 object2Position;
+	Vector3f object1Position;
+	Vector3f object2Position;
 	bool enabled;
 	bool useLimit;
 	float limitLower;
@@ -55,18 +57,18 @@ struct g6dofParam{
 
 	string name;
 	bool enabled;
-	vec3 position;
-	quat rotation;
+	Vector3f position;
+	Quaternionf rotation;
 	string object1Name;
 	string object2Name;
-	vec3 object1Position;
-	vec3 object2Position;
+	Vector3f object1Position;
+	Vector3f object2Position;
 	bool[3] useAngLimit; //(x, y, z) : ( 0, 1, 2 )
-	vec3 angLimitLower;
-	vec3 angLimitUpper;
+	Vector3f angLimitLower;
+	Vector3f angLimitUpper;
 	bool[3] useLinLimit;
-	vec3 linLimitLower;
-	vec3 linLimitUpper;
+	Vector3f linLimitLower;
+	Vector3f linLimitUpper;
 
 }
 
@@ -75,12 +77,12 @@ struct g6dofParam{
 struct serialOrderGene{
 
 	static uint lengthOfSet = 8;
-	vec3[string][] tracks;
+	Vector3f[string][] tracks;
 	bool[][] wavelengthOfOrder;
 	int[] moveSpan;
 	float friction;
 	float maxRotationalMotorForce;
-	vec3[string][] maxVelocity;
+	Vector3f[string][] maxVelocity;
 
 	void init(){
 
@@ -110,7 +112,7 @@ struct serialOrderGene{
 	}
 
 
-	void init(string s, vec3 lowerLimit, vec3 upperLimit){
+	void init(string s, Vector3f lowerLimit, Vector3f upperLimit){
 
 		auto rnd = Random(unpredictableSeed);
 
@@ -118,77 +120,77 @@ struct serialOrderGene{
 
 			float x, y, z;
 			if(lowerLimit.getx()<upperLimit.getx()){
-				x = uniform(lowerLimit.getx(), upperLimit.getx(), rnd);
+				x = uniform(lowerLimit[0], upperLimit[0], rnd);
 			}else{
 				x = 0.0f;
 			}
 
 			if(lowerLimit.gety()<upperLimit.gety()){
-				y = uniform(lowerLimit.gety(), upperLimit.gety(), rnd);
+				y = uniform(lowerLimit[1], upperLimit[1], rnd);
 			}else{
 				y = 0.0f;
 			}
 
 			if(lowerLimit.getz()<upperLimit.getz()){
-				z = uniform(lowerLimit.getz(), upperLimit.getz(), rnd);
+				z = uniform(lowerLimit[2], upperLimit[2], rnd);
 			}else{
 				z = 0.0f;
 			}
 
-			tracks[i][s] = createVec3(x, y, z);
+			tracks[i][s] = Vector3f(x, y, z);
 			//write(s, ":", i, "(", tracks[i][s].getx(), ", ", tracks[i][s].gety(), ")");
 		}
 
 		for(int i=0; i<lengthOfSet; i++){
 
 			float x, y, z;
-			if(lowerLimit.getx()<upperLimit.getx()){
+			if(lowerLimit[0]<upperLimit[0]){
 				x = uniform(0.0f, 20.0f, rnd);
 			}else{
 				x = 0.0f;
 			}
 
-			if(lowerLimit.gety()<upperLimit.gety()){
+			if(lowerLimit[1]<upperLimit[1]){
 				y = uniform(0.0f, 20.0f, rnd);
 			}else{
 				y = 0.0f;
 			}
 
-			if(lowerLimit.getz()<upperLimit.getz()){
+			if(lowerLimit[2]<upperLimit[2]){
 				z = uniform(0.0f, 20.0f, rnd);
 			}else{
 				z = 0.0f;
 			}
 
-			maxVelocity[i][s] = createVec3(x, y, z);
+			maxVelocity[i][s] = Vector3f(x, y, z);
 			//write(s, ":", i, "(", tracks[i][s].getx(), ", ", tracks[i][s].gety(), ")");
 		}
 
 	}
 
-	void init(int i, string s, vec3 lowerLimit, vec3 upperLimit){
+	void init(int i, string s, Vector3f lowerLimit, Vector3f upperLimit){
 		auto rnd = Random(unpredictableSeed);
 
 			float x, y, z;
-			if(lowerLimit.getx()<upperLimit.getx()){
-				x = uniform(lowerLimit.getx(), upperLimit.getx(), rnd);
+			if(lowerLimit[0]<upperLimit[0]){
+				x = uniform(lowerLimit[0], upperLimit[0], rnd);
 			}else{
 				x = 0.0f;
 			}
 
-			if(lowerLimit.gety()<upperLimit.gety()){
-				y = uniform(lowerLimit.gety(), upperLimit.gety(), rnd);
+			if(lowerLimit[1]<upperLimit[1]){
+				y = uniform(lowerLimit[1], upperLimit[1], rnd);
 			}else{
 				y = 0.0f;
 			}
 
-			if(lowerLimit.getz()<upperLimit.getz()){
-				z = uniform(lowerLimit.getz(), upperLimit.getz(), rnd);
+			if(lowerLimit[2]<upperLimit[2]){
+				z = uniform(lowerLimit[2], upperLimit[2], rnd);
 			}else{
 				z = 0.0f;
 			}
 
-			tracks[i][s] = createVec3(x, y, z);
+			tracks[i][s] = Vector3f(x, y, z);
 
 	}
 
@@ -196,26 +198,28 @@ struct serialOrderGene{
 	void copytracks(serialOrderGene u){
 		foreach(int i, elem1; this.tracks){
 			foreach(string s, elem2; elem1){
-				this.tracks[i][s] = createVec3( u.tracks[i][s].getx(), u.tracks[i][s].gety(), u.tracks[i][s].getz() );
+				this.tracks[i][s] = u.tracks[i][s];
 			}
 		}
 	}
 
 	void copytracks(serialOrderGene u,int i,string s){
-		this.tracks[i][s] = createVec3( u.tracks[i][s].getx(), u.tracks[i][s].gety(), u.tracks[i][s].getz() );
+		this.tracks[i][s] = u.tracks[i][s];
 	}
 
 
 }
 
 
+
+//========未整備==========
 struct oscillator2Gene{
 
-	vec3[string] angLimitLower;
-	vec3[string] angLimitUpper;
+	Vector3f[string] angLimitLower;
+	Vector3f[string] angLimitUpper;
 	float friction;
-	vec3[string] maxForce; //最大出力．いくらmaxVeloを大きくしてもこれ以上の力では駆動しない．
-	vec3[string] maxVelo; //g6dofを動かす最高速
+	Vector3f[string] maxForce; //最大出力．いくらmaxVeloを大きくしてもこれ以上の力では駆動しない．
+	Vector3f[string] maxVelo; //g6dofを動かす最高速
 	oscillator2 oscil; //振動子モデル．1個体に1つ．
 	int degree; //振動子モデルの近似精度(sin(nx), cos(nx)のn)
 
@@ -233,13 +237,13 @@ struct oscillator2Gene{
 	void init(string s){
 		auto rnd = Random(unpredictableSeed);
 
-		maxForce[s] = createVec3( uniform(0.0f, 10.0f, rnd), uniform(0.0f, 10.0f, rnd), 0.0f );
-		maxVelo[s] = createVec3( uniform(0.0f, 10.0f, rnd), uniform(0.0f, 10.0f, rnd), uniform(0.0f, 10.0f, rnd) );
+		maxForce[s] = Vector3f( uniform(0.0f, 10.0f, rnd), uniform(0.0f, 10.0f, rnd), 0.0f );
+		maxVelo[s] = Vector3f( uniform(0.0f, 10.0f, rnd), uniform(0.0f, 10.0f, rnd), uniform(0.0f, 10.0f, rnd) );
 
 		oscil.init(s);
 
-		angLimitUpper[s] = createVec3( uniform(0.0f, 1.57f, rnd), uniform(0.0f, 1.57f, rnd), 0.0f );
-		angLimitLower[s] = createVec3( uniform(-1.57f, 0.0f, rnd), uniform(-1.57f, 0.0f, rnd), 0.0f );
+		angLimitUpper[s] = Vector3f( uniform(0.0f, 1.57f, rnd), uniform(0.0f, 1.57f, rnd), 0.0f );
+		angLimitLower[s] = Vector3f( uniform(-1.57f, 0.0f, rnd), uniform(-1.57f, 0.0f, rnd), 0.0f );
 
 	}
 
@@ -248,8 +252,8 @@ struct oscillator2Gene{
 	void init(string s, g6dofParam dofParam){
 
 		auto rnd = Random(unpredictableSeed);
-		maxForce[s] = createVec3( uniform(0.0f, 10.0f, rnd), uniform(0.0f, 10.0f, rnd), 0.0f );
-		maxVelo[s] = createVec3( uniform(0.0f, 10.0f, rnd), uniform(0.0f, 10.0f, rnd), uniform(0.0f, 10.0f, rnd) );
+		maxForce[s] = Vector3f( uniform(0.0f, 10.0f, rnd), uniform(0.0f, 10.0f, rnd), 0.0f );
+		maxVelo[s] = Vector3f( uniform(0.0f, 10.0f, rnd), uniform(0.0f, 10.0f, rnd), uniform(0.0f, 10.0f, rnd) );
 
 		oscil.init(s);
 

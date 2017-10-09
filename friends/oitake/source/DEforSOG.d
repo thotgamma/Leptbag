@@ -6,6 +6,9 @@ import std.conv;
 import std.algorithm;
 
 import japariSDK.japarilib;
+import dlib.math.vector;
+import dlib.math.quaternion;
+
 import agent;
 import DEforOscillator2;
 import Oscillator;
@@ -30,24 +33,17 @@ void simpleSOG(agent[] children, agent[] parents, float Cr, float F, int[] bests
 				//if((j==0)&&(s=="Constraint")) writeln("no. ", i , " : coin is ", coin);
 				if(0.4 > coin){
 					//if((j==0)&&(s=="Constraint")) writeln("use first gene");
-					child.SOG.tracks[i][s] = createVec3(
-							parents[k].SOG.tracks[i][s].getx(),
-							parents[k].SOG.tracks[i][s].gety(),
-							parents[k].SOG.tracks[i][s].getz(),
-							);
+					child.SOG.tracks[i][s] = parents[k].SOG.tracks[i][s];
 				}else if(0.8 > coin){
 					//if((j==0)&&(s=="Constraint")) writeln("use second gene");
-					child.SOG.tracks[i][s] = createVec3(
-							parents[l].SOG.tracks[i][s].getx(),
-							parents[l].SOG.tracks[i][s].gety(),
-							parents[l].SOG.tracks[i][s].getz(),
-							);
+					child.SOG.tracks[i][s] = parents[l].SOG.tracks[i][s];
 				}else{
 					/+
 					if((j==0)&&(s=="Constraint")) writeln("before mutation");
 					if((j==0)&&(s=="Constraint")) writeln(child.SOG.tracks[i][s].getx());
 					+/
-					child.SOG.tracks[i][s] = createVec3( uniform(-1.57f/2.0f, 1.57f/2.0f, rnd), uniform(-1.57f/2.0f, 1.57f/2.0f, rnd), 0.0f );
+
+					child.SOG.init(s, child.bodyInformation.g6dofParams[s].angLimitLower, child.bodyInformation.g6dofParams[s].angLimitUpper);
 					/+
 					if((j==0)&&(s=="Constraint")) writeln("after mutation");
 					if((j==0)&&(s=="Constraint")) writeln(child.SOG.tracks[i][s].getx());
@@ -70,13 +66,12 @@ void simpleSOG(agent[] children, agent[] parents, float Cr, float F, int[] bests
 }
 
 
+//rand
 void evolveSOG(int agentNum, agent[] children, agent[] parents, float coin, float Cr, float F){
 
 	auto rnd = Random(unpredictableSeed);
 
 	foreach(int j, child; children){
-
-
 		foreach(string s, dof; child.g6dofs){
 			for(uint i=0; i<child.SOG.tracks.length; i++){
 
@@ -85,13 +80,7 @@ void evolveSOG(int agentNum, agent[] children, agent[] parents, float coin, floa
 				int m = uniform(0, agentNum, rnd);
 
 				if(Cr > uniform(0.0f, 1.0f, rnd)){
-
-					child.SOG.tracks[i][s] = createVec3(
-							parents[k].SOG.tracks[i][s].getx() + F * ( parents[m].SOG.tracks[i][s].getx() - parents[l].SOG.tracks[i][s].getx() ),
-							parents[k].SOG.tracks[i][s].gety() + F * ( parents[m].SOG.tracks[i][s].gety() - parents[l].SOG.tracks[i][s].gety() ),
-							parents[k].SOG.tracks[i][s].getz() + F * ( parents[m].SOG.tracks[i][s].getz() - parents[l].SOG.tracks[i][s].getz() )
-							);
-
+					child.SOG.tracks[i][s] = parents[k].SOG.tracks[i][s] + F * ( parents[m].SOG.tracks[i][s] - parents[l].SOG.tracks[i][s] );
 				}else{
 
 					if(coin > uniform(0.0f, 1.0f, rnd)){
@@ -104,12 +93,12 @@ void evolveSOG(int agentNum, agent[] children, agent[] parents, float coin, floa
 
 			}
 		}
-
 	}
 
 }
 
 
+//best
 void evolveSOG(int agentNum, agent[] children, agent[] parents, float coin, float Cr, float F, int[] bests){
 
 	auto rnd = Random(unpredictableSeed);
@@ -126,11 +115,7 @@ void evolveSOG(int agentNum, agent[] children, agent[] parents, float coin, floa
 				if(Cr > uniform(0.0f, 1.0f, rnd)){
 
 
-					child.SOG.tracks[i][s] = createVec3(
-							parents[k].SOG.tracks[i][s].getx() + F * ( parents[m].SOG.tracks[i][s].getx() - parents[l].SOG.tracks[i][s].getx() ),
-							parents[k].SOG.tracks[i][s].gety() + F * ( parents[m].SOG.tracks[i][s].gety() - parents[l].SOG.tracks[i][s].gety() ),
-							parents[k].SOG.tracks[i][s].getz() + F * ( parents[m].SOG.tracks[i][s].getz() - parents[l].SOG.tracks[i][s].getz() )
-							);
+					child.SOG.tracks[i][s] = parents[k].SOG.tracks[i][s] + F * ( parents[m].SOG.tracks[i][s] - parents[l].SOG.tracks[i][s] );
 
 				}else{
 

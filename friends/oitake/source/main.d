@@ -8,6 +8,9 @@ import std.algorithm;
 import std.array;
 
 import japariSDK.japarilib;
+import dlib.math.vector;
+import dlib.math.quaternion;
+
 import agent;
 import DEforOscillator2;
 import DEforSOG;
@@ -27,10 +30,6 @@ agent[] evaluateds; //DEにおける突然変異個体
 
 agentBodyParameter info;
 
-
-
-
-
 //ApplicationInterface----------------------
 
 
@@ -45,13 +44,11 @@ extern (C) void init(){
 
 	//jsonからload
 	loadMesh(info.partParams);
-	loadHinge(info.hingeParams);
 	loadG6dof(info.g6dofParams);
 
 	writeln("loaded data from .json");
 
 	info.partParams = info.partParams.rehash;
-	info.hingeParams = info.hingeParams.rehash;
 	info.g6dofParams = info.g6dofParams.rehash;
 
 

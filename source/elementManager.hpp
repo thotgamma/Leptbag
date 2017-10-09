@@ -19,6 +19,7 @@ class elementManager;
 #include "bodyGenerator.hpp"
 #include "vertexManager.hpp"
 
+
 class elementManager_interface{
 	public:
 	virtual elementNode* generate(parameterPack* raw_input) = 0;
@@ -26,7 +27,8 @@ class elementManager_interface{
 	virtual void destroyElement(int id) = 0;
 };
 
-class elementManager : public elementManager_interface {
+
+class elementManager : public elementManager_interface{
 
 	GLuint indexBufferObject;
 	GLuint instanceMatrixBuffer;
@@ -50,6 +52,7 @@ class elementManager : public elementManager_interface {
 
 
 };
+
 
 extern "C" elementManager* createElementManager(vertexManager* vm, btRigidBody* (*bodyGenerator)(std::unique_ptr<parameterPack>));
 
