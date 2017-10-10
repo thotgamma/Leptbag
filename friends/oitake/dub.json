@@ -1,9 +1,9 @@
 {
 
-	"targetName": “oitake”,
-	"name": “oitake”,
+	"targetName": "oitake",
+	"name": "oitake",
 	"authors": [
-		“sanamichoro”
+		"sanamichoro"
 	],
 	"dependencies": {
 		"dlib": "~>0.11.1"
@@ -15,7 +15,7 @@
 	"sourcePaths": ["source/", "lib/"],
 	"importPaths": ["source/", "lib/"],
 	"targetType": "dynamicLibrary",
-	"dflags": ["-defaultlib=libphobos2.so"],
+	"dflags": ["-defaultlib=libphobos2.so", "-J."],
 	"lflags": ["-undefined", "dynamic_lookup"],
 	"postBuildCommands": ["./run.sh $$DUB_TARGET_NAME $$DUB_RUN"]
 

@@ -12,9 +12,9 @@ import dlib.math.vector;
 import dlib.math.quaternion;
 
 import agent;
-import DEforOscillator2;
+//import DEforOscillator2;
 import DEforSOG;
-import Oscillator;
+//import Oscillator;
 import params;
 import loadJson;
 
@@ -77,7 +77,8 @@ void prepareAgentsGroup(agent[] group, agentBodyParameter infomation){
 
 	//group.length = agentNum*averageOf;
 	foreach(int i, ref elem; group){
-		elem = new agent(to!float(i)*personalSpace, 0.0f, -1.0f, info);
+		writeln(i, " : ");
+		group[i] = new agent(to!float(i)*personalSpace, 0.0f, -1.0f, info);
 	}
 
 }
@@ -125,9 +126,9 @@ extern (C) void tick(){
 		writeln();
 		/+
 		if(!evaluation){
-			writeln(agents[0].parts[measuredPart].getZpos());
-			writeln(agents[agentNum].parts[measuredPart].getZpos());
-			writeln(agents[2*agentNum].parts[measuredPart].getZpos());
+			writeln(agents[0].parts[measuredPart].getPos().z);
+			writeln(agents[agentNum].parts[measuredPart].getPos().z);
+			writeln(agents[2*agentNum].parts[measuredPart].getPos().z);
 
 			agents[0].checkSOG();
 			agents[agentNum].checkSOG();
@@ -192,18 +193,18 @@ void terminateTrial(){
 		foreach(int i, ref elem; agents){
 
 			//移動距離を記録
-			preScores[i] += elem.parts[measuredPart].getZpos();
+			preScores[i] += elem.parts[measuredPart].getPos().z;
 
 
 
 			for(int k=1; k<=averageOf; k++){
 				if(i<agentNum*k){
-					averageScore[k-1] += elem.parts[measuredPart].getZpos();
+					averageScore[k-1] += elem.parts[measuredPart].getPos().z;
 					break;
 				}
 			}
 
-			proScoreTmp = min( elem.parts[measuredPart].getZpos(), proScoreTmp );
+			proScoreTmp = min( elem.parts[measuredPart].getPos().z, proScoreTmp );
 
 
 		}
@@ -215,16 +216,16 @@ void terminateTrial(){
 
 		foreach(int i, ref elem; evaluateds){
 
-			evaluatedsScores[i] += elem.parts[measuredPart].getZpos();
+			evaluatedsScores[i] += elem.parts[measuredPart].getPos().z;
 
 			for(int k=1; k<=averageOf; k++){
 				if(i<agentNum*k){
-					averageScore[k-1] += elem.parts[measuredPart].getZpos();
+					averageScore[k-1] += elem.parts[measuredPart].getPos().z;
 					break;
 				}
 			}
 
-			proScoreTmp = min( elem.parts[measuredPart].getZpos(), proScoreTmp );
+			proScoreTmp = min( elem.parts[measuredPart].getPos().z, proScoreTmp );
 
 
 		}
@@ -344,7 +345,7 @@ void terminateGeneration(){
 
 			//evaluatedsをpop
 			foreach(int i, ref elem; evaluateds){
-				elem.spawn(createVec3(to!float(i)*personalSpace, 0.0f, 0.0f));
+				elem.spawn(Vector3f(to!float(i)*personalSpace, 0.0f, 0.0f));
 			}
 
 			//DEに用いるパラメータ
@@ -463,7 +464,7 @@ void terminateGeneration(){
 
 		//突然変異体は一旦退場
 		foreach(int i, ref elem; evaluateds) elem.despawn();
-		foreach(int i, ref elem; agents) elem.spawn(createVec3(to!float(i)*personalSpace, 0.0f, 0.0f));
+		foreach(int i, ref elem; agents) elem.spawn(Vector3f(to!float(i)*personalSpace, 0.0f, 0.0f));
 
 		evaluation = false; //次は採用した突然変異体を混ぜて性能評価
 

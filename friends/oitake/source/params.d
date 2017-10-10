@@ -10,7 +10,7 @@ import japariSDK.japarilib;
 import dlib.math.vector;
 import dlib.math.quaternion;
 
-import Oscillator;
+//import Oscillator;
 
 
 struct agentBodyParameter{
@@ -119,51 +119,51 @@ struct serialOrderGene{
 		for(int i=0; i<lengthOfSet; i++){
 
 			float x, y, z;
-			if(lowerLimit.getx()<upperLimit.getx()){
-				x = uniform(lowerLimit[0], upperLimit[0], rnd);
+			if(lowerLimit.x<upperLimit.x){
+				x = uniform(lowerLimit.x, upperLimit.x, rnd);
 			}else{
 				x = 0.0f;
 			}
 
-			if(lowerLimit.gety()<upperLimit.gety()){
-				y = uniform(lowerLimit[1], upperLimit[1], rnd);
+			if(lowerLimit.y<upperLimit.y){
+				y = uniform(lowerLimit.y, upperLimit.y, rnd);
 			}else{
 				y = 0.0f;
 			}
 
-			if(lowerLimit.getz()<upperLimit.getz()){
-				z = uniform(lowerLimit[2], upperLimit[2], rnd);
+			if(lowerLimit.z<upperLimit.z){
+				z = uniform(lowerLimit.z, upperLimit.z, rnd);
 			}else{
 				z = 0.0f;
 			}
 
 			tracks[i][s] = Vector3f(x, y, z);
-			//write(s, ":", i, "(", tracks[i][s].getx(), ", ", tracks[i][s].gety(), ")");
+			//write(s, ":", i, "(", tracks[i][s].x, ", ", tracks[i][s].y, ")");
 		}
 
 		for(int i=0; i<lengthOfSet; i++){
 
 			float x, y, z;
-			if(lowerLimit[0]<upperLimit[0]){
+			if(lowerLimit.x<upperLimit.x){
 				x = uniform(0.0f, 20.0f, rnd);
 			}else{
 				x = 0.0f;
 			}
 
-			if(lowerLimit[1]<upperLimit[1]){
+			if(lowerLimit.y<upperLimit.y){
 				y = uniform(0.0f, 20.0f, rnd);
 			}else{
 				y = 0.0f;
 			}
 
-			if(lowerLimit[2]<upperLimit[2]){
+			if(lowerLimit.z<upperLimit.z){
 				z = uniform(0.0f, 20.0f, rnd);
 			}else{
 				z = 0.0f;
 			}
 
 			maxVelocity[i][s] = Vector3f(x, y, z);
-			//write(s, ":", i, "(", tracks[i][s].getx(), ", ", tracks[i][s].gety(), ")");
+			//write(s, ":", i, "(", tracks[i][s].x, ", ", tracks[i][s].y, ")");
 		}
 
 	}
@@ -172,20 +172,20 @@ struct serialOrderGene{
 		auto rnd = Random(unpredictableSeed);
 
 			float x, y, z;
-			if(lowerLimit[0]<upperLimit[0]){
-				x = uniform(lowerLimit[0], upperLimit[0], rnd);
+			if(lowerLimit.x<upperLimit.x){
+				x = uniform(lowerLimit.x, upperLimit.x, rnd);
 			}else{
 				x = 0.0f;
 			}
 
-			if(lowerLimit[1]<upperLimit[1]){
-				y = uniform(lowerLimit[1], upperLimit[1], rnd);
+			if(lowerLimit.y<upperLimit.y){
+				y = uniform(lowerLimit.y, upperLimit.y, rnd);
 			}else{
 				y = 0.0f;
 			}
 
-			if(lowerLimit[2]<upperLimit[2]){
-				z = uniform(lowerLimit[2], upperLimit[2], rnd);
+			if(lowerLimit.z<upperLimit.z){
+				z = uniform(lowerLimit.z, upperLimit.z, rnd);
 			}else{
 				z = 0.0f;
 			}
@@ -213,6 +213,7 @@ struct serialOrderGene{
 
 
 //========未整備==========
+/+
 struct oscillator2Gene{
 
 	Vector3f[string] angLimitLower;
@@ -274,13 +275,13 @@ struct oscillator2Gene{
 
 		write("angLimitLower : ");
 		foreach(string s, elem; angLimitLower){
-			write("[ \"", s, "\": ", elem.getx(), ", ", elem.gety(), ", ", elem.getz(), " ], ");
+			write("[ \"", s, "\": ", elem.x, ", ", elem.y, ", ", elem.z, " ], ");
 		}
 		writeln("");
 
 		write("angLimitUpper : ");
 		foreach(string s, elem; angLimitUpper){
-			write("[ \"", s, "\": ", elem.getx(), ", ", elem.gety(), ", ", elem.getz(), " ], ");
+			write("[ \"", s, "\": ", elem.x, ", ", elem.y, ", ", elem.z, " ], ");
 		}
 		writeln("");
 
@@ -288,13 +289,13 @@ struct oscillator2Gene{
 
 		write("maxForce : ");
 		foreach(string s, elem; maxForce){
-			write("[ \"", s, "\": ", elem.getx(), ", ", elem.gety(), ", ", elem.getz(), " ], ");
+			write("[ \"", s, "\": ", elem.x, ", ", elem.y, ", ", elem.z, " ], ");
 		}
 		writeln("");
 
 		write("maxVelo : ");
 		foreach(string s, elem; maxVelo){
-			write("[ \"", s, "\": ", elem.getx(), ", ", elem.gety(), ", ", elem.getz(), " ], ");
+			write("[ \"", s, "\": ", elem.x, ", ", elem.y, ", ", elem.z, " ], ");
 		}
 		writeln("");
 
@@ -306,3 +307,4 @@ struct oscillator2Gene{
 
 
 }
++/

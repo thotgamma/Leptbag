@@ -10,8 +10,8 @@ import dlib.math.vector;
 import dlib.math.quaternion;
 
 import agent;
-import DEforOscillator2;
-import Oscillator;
+//import DEforOscillator2;
+//import Oscillator;
 import params;
 
 Random rnd;

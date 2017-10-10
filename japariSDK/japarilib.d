@@ -443,7 +443,7 @@ class generic6DofConstraint{
 	generic6DofConstraint_interface entity;
 	bool exported;
 
-	this(elementNode cubeA, elementNode cubeB, Vector3f positionA, Vector3f positionB, Vector3f axis, Quaternionf rotation){
+	this(elementNode cubeA, elementNode cubeB, Vector3f positionA, Vector3f positionB, Quaternionf rotation){
 		entity = createGeneric6DofConstraint(cubeA.entity, cubeB.entity, toVec3(positionA), toVec3(positionB), toQuat(rotation));
 		exported = false;
 	}
@@ -456,7 +456,7 @@ class generic6DofConstraint{
 		entity.setAngularLimit(toVec3(lower), toVec3(upper));
 	}
 
-	void serLinearLimit(Vector3f lower, Vector3f upper){
+	void setLinearLimit(Vector3f lower, Vector3f upper){
 		entity.setLinearLimit(toVec3(lower), toVec3(upper));
 	}
 

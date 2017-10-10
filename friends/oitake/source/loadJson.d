@@ -9,7 +9,7 @@ import dlib.math.quaternion;
 import params;
 
 
-const string loadmodel = "../models/oitake.fpm";
+const string loadmodel = "models/oitake.fpm";
 
 
 
@@ -29,15 +29,27 @@ void loadMesh(ref partParam[string] partParams){
 				partParams[name].position = Vector3f(elem["xpos"].floating, elem["ypos"].floating, elem["zpos"].floating);
 				partParams[name].scale = Vector3f(elem["xscl"].floating, elem["yscl"].floating, elem["zscl"].floating);
 				partParams[name].rotation = Quaternionf(elem["wqat"].floating, elem["xqat"].floating, elem["yqat"].floating, elem["zqat"].floating);
-				partParams[name].mass = elem["mass"].floating;
-				partParams[name].friction = elem["friction"].floating;
+				auto existMass = "mass" in elem;
+				if(existMass!=null){
+					partParams[name].mass = elem["mass"].floating;
+				}else{
+					partParams[name].mass = 0.0f;
+				}
+
+				auto existFriction = "friction" in elem;
+				if(existFriction!=null){
+					partParams[name].friction = elem["friction"].floating;
+				}else{
+					partParams[name].friction = 0.0f;
+				}
 
 				partParams[name].vertices = new vertexManager();
 
 				foreach(objvertex; elem["vertex"].array){
-					partParams[name].vertices.addVertex(objvertex.array[0].floating, objvertex.array[1].floating, objvertex.array[2].floating,
-								objvertex.array[3].floating, objvertex.array[4].floating, objvertex.array[5].floating,
-								objvertex.array[6].floating, objvertex.array[7].floating, objvertex.array[8].floating);
+					partParams[name].vertices.addVertex(
+							objvertex.array[0].floating, objvertex.array[1].floating, objvertex.array[2].floating,
+							objvertex.array[3].floating, objvertex.array[4].floating, objvertex.array[5].floating,
+							objvertex.array[6].floating, objvertex.array[7].floating, objvertex.array[8].floating );
 				}
 
 			}
