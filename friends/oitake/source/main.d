@@ -19,7 +19,7 @@ import params;
 import loadJson;
 
 
-const int agentNum = 50;
+const int agentNum = 30;
 const int averageOf = 3; //一世代averageOf回の試行を行いその平均をスコアとする
 const float bodyMass = 5.0f; //動物の総体重．blender側では各パーツに百分率で質量を付与．
 const float personalSpace = 5.0f; //動物を並べる間隔
@@ -73,12 +73,13 @@ extern (C) void init(){
 
 }
 
-void prepareAgentsGroup(agent[] group, agentBodyParameter infomation){
-
+void prepareAgentsGroup(agent[] group, agentBodyParameter information){
 	//group.length = agentNum*averageOf;
+
+	agent.registerParameter(information);
+
 	foreach(int i, ref elem; group){
-		writeln(i, " : ");
-		group[i] = new agent(to!float(i)*personalSpace, 0.0f, -1.0f, info);
+		group[i] = new agent(to!float(i)*personalSpace, 0.0f, -1.0f);
 	}
 
 }
@@ -320,7 +321,7 @@ void terminateGeneration(){
 
 			evaluateds.length = agentNum*averageOf;
 			foreach(int i, ref elem; evaluateds){
-				elem = new agent(to!float(i)*personalSpace, 0.0f, 0.0f, info);
+				elem = new agent(to!float(i)*personalSpace, 0.0f, 0.0f);
 				elem.copyGene(agents[i]);
 			}
 

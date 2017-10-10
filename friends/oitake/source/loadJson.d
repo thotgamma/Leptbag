@@ -28,7 +28,7 @@ void loadMesh(ref partParam[string] partParams){
 				partParams[name] = partParam();
 				partParams[name].position = Vector3f(elem["xpos"].floating, elem["ypos"].floating, elem["zpos"].floating);
 				partParams[name].scale = Vector3f(elem["xscl"].floating, elem["yscl"].floating, elem["zscl"].floating);
-				partParams[name].rotation = Quaternionf(elem["wqat"].floating, elem["xqat"].floating, elem["yqat"].floating, elem["zqat"].floating);
+				partParams[name].rotation = Quaternionf(elem["xqat"].floating, elem["yqat"].floating, elem["zqat"].floating, elem["wqat"].floating);
 				auto existMass = "mass" in elem;
 				if(existMass!=null){
 					partParams[name].mass = elem["mass"].floating;
@@ -50,6 +50,11 @@ void loadMesh(ref partParam[string] partParams){
 							objvertex.array[0].floating, objvertex.array[1].floating, objvertex.array[2].floating,
 							objvertex.array[3].floating, objvertex.array[4].floating, objvertex.array[5].floating,
 							objvertex.array[6].floating, objvertex.array[7].floating, objvertex.array[8].floating );
+					/+
+				writeln(	name, " : ", objvertex.array[0].floating, ", ",  objvertex.array[1].floating, ", ",  objvertex.array[2].floating, ", ",
+							objvertex.array[3].floating, ", ",  objvertex.array[4].floating, ", ",  objvertex.array[5].floating, ", ", 
+							objvertex.array[6].floating, ", ",  objvertex.array[7].floating, ", ",  objvertex.array[8].floating );
+				+/
 				}
 
 			}

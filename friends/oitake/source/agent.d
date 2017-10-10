@@ -34,31 +34,26 @@ g6dofParam[string] g6dofParams; //g6dofのパラメータ
 
 class agent{
 
+	static agentBodyParameter bodyInformation;
 	elementNode[string] parts;
 	generic6DofConstraint[string] g6dofs;
 	serialOrderGene SOG;
 	//oscillator2Gene gene; //振動子モデル+DEにおける遺伝子
-	agentBodyParameter bodyInformation;
 	int sequenceOfOrder; //SOG.tracksのsequenceOfOrder番目の命令を動作に用いる
 	int biologicalClock; //現在のsequenceOfOrderになってからどのくらい時間が経ったか
 
-	this(float x, float y, float z, agentBodyParameter info){
 
 
-		this.bodyInformation = info;
-		foreach(string name, params;bodyInformation.partParams){
-			writeln("\t", name);
-			this.bodyInformation.partsGenerator[name] = new elementManager(this.bodyInformation.partParams[name].vertices, &createConvexHullShapeBody);
-		}
+	this(float x, float y, float z){
+
 		this.spawn(Vector3f(x, y, z));
-
 
 		this.SOG.init();
 		//this.gene.init();
 
 		foreach(string s, dof; g6dofs){
-			if(this.bodyInformation.g6dofParams[s].enabled){
-				this.SOG.init(s, this.bodyInformation.g6dofParams[s].angLimitLower, this.bodyInformation.g6dofParams[s].angLimitUpper);
+			if(agent.bodyInformation.g6dofParams[s].enabled){
+				this.SOG.init(s, agent.bodyInformation.g6dofParams[s].angLimitLower, agent.bodyInformation.g6dofParams[s].angLimitUpper);
 			}
 			//this.gene.init(s);
 		}
@@ -68,32 +63,34 @@ class agent{
 	}
 
 
+	static void registerParameter(agentBodyParameter info);
+
 	void spawn(Vector3f position){
 
 		this.sequenceOfOrder = 0;
 		this.biologicalClock = 0;
 
 		//身体パーツ
-		foreach(string s, partsGen; bodyInformation.partsGenerator){
+		foreach(string s, partsGen; agent.bodyInformation.partsGenerator){
 
 			parts[s] = partsGen.generate(
 						parameterPack(
-							param("position", (bodyInformation.partParams[s].position + position) ),
-							param("scale",    bodyInformation.partParams[s].scale),
-							param("rotation", bodyInformation.partParams[s].rotation),
-							param("model",    bodyInformation.partParams[s].vertices),
-							param("mass",bodyInformation.partParams[s].mass * bodyMass)
+							param("position", (agent.bodyInformation.partParams[s].position + position) ),
+							param("scale",    agent.bodyInformation.partParams[s].scale),
+							param("rotation", agent.bodyInformation.partParams[s].rotation),
+							param("model",    agent.bodyInformation.partParams[s].vertices),
+							param("mass",agent.bodyInformation.partParams[s].mass * bodyMass)
 						)
 						);
 
 		}
 
 		//6Dof
-		foreach(string s, param; bodyInformation.g6dofParams){
-			if(this.bodyInformation.g6dofParams[s].enabled){
-				g6dofs[s] = new generic6DofConstraint(parts[bodyInformation.g6dofParams[s].object1Name], parts[bodyInformation.g6dofParams[s].object2Name],
-						bodyInformation.g6dofParams[s].object1Position, bodyInformation.g6dofParams[s].object2Position,
-						bodyInformation.g6dofParams[s].rotation);
+		foreach(string s, param; agent.bodyInformation.g6dofParams){
+			if(agent.bodyInformation.g6dofParams[s].enabled){
+				g6dofs[s] = new generic6DofConstraint(parts[agent.bodyInformation.g6dofParams[s].object1Name], parts[agent.bodyInformation.g6dofParams[s].object2Name],
+						agent.bodyInformation.g6dofParams[s].object1Position, agent.bodyInformation.g6dofParams[s].object2Position,
+						agent.bodyInformation.g6dofParams[s].rotation);
 			}
 		}
 
@@ -107,11 +104,11 @@ class agent{
 
 		foreach(string s, dof; g6dofs){
 
-			if(this.bodyInformation.g6dofParams[s].enabled){
+			if(agent.bodyInformation.g6dofParams[s].enabled){
 
 				for(int i=0; i<3; i++){
-					if(bodyInformation.g6dofParams[s].useAngLimit[i]) g6dofs[s].setRotationalMotor(i);
-					if(bodyInformation.g6dofParams[s].useLinLimit[i]) g6dofs[s].setLinearMotor(i);
+					if(agent.bodyInformation.g6dofParams[s].useAngLimit[i]) g6dofs[s].setRotationalMotor(i);
+					if(agent.bodyInformation.g6dofParams[s].useLinLimit[i]) g6dofs[s].setLinearMotor(i);
 				}
 
 
@@ -124,11 +121,11 @@ class agent{
 
 				//setting angular of g6dofs
 				bool useAng = true;
-				for(int i=0; i<bodyInformation.g6dofParams[s].useAngLimit.length; i++) useAng = useAng && bodyInformation.g6dofParams[s].useAngLimit[i];
+				for(int i=0; i<agent.bodyInformation.g6dofParams[s].useAngLimit.length; i++) useAng = useAng && agent.bodyInformation.g6dofParams[s].useAngLimit[i];
 				if(useAng){
 					g6dofs[s].setAngularLimit(
-							bodyInformation.g6dofParams[s].angLimitLower,
-							bodyInformation.g6dofParams[s].angLimitUpper );
+							agent.bodyInformation.g6dofParams[s].angLimitLower,
+							agent.bodyInformation.g6dofParams[s].angLimitUpper );
 				}else{
 					g6dofs[s].setAngularLimit( zeroVector3f, zeroVector3f );
 				}
@@ -136,9 +133,9 @@ class agent{
 
 				//setting linear of g6dofs
 				bool useLin = true;
-				for(int i=0; i<bodyInformation.g6dofParams[s].useLinLimit.length; i++) useLin = useLin && bodyInformation.g6dofParams[s].useLinLimit[i];
+				for(int i=0; i<agent.bodyInformation.g6dofParams[s].useLinLimit.length; i++) useLin = useLin && agent.bodyInformation.g6dofParams[s].useLinLimit[i];
 				if(false){//useLin){
-					g6dofs[s].setLinearLimit( bodyInformation.g6dofParams[s].linLimitLower, bodyInformation.g6dofParams[s].linLimitUpper );
+					g6dofs[s].setLinearLimit( agent.bodyInformation.g6dofParams[s].linLimitLower, agent.bodyInformation.g6dofParams[s].linLimitUpper );
 				}else{
 					g6dofs[s].setLinearLimit( zeroVector3f, zeroVector3f );
 				}
@@ -160,7 +157,7 @@ class agent{
 				part.destroy();
 		}
 		foreach(string s, dofs; g6dofs){
-			if(this.bodyInformation.g6dofParams[s].enabled){
+			if(agent.bodyInformation.g6dofParams[s].enabled){
 				dofs.destroy();
 			}
 		}
@@ -253,4 +250,15 @@ class agent{
 
 
 
-}
+	}
+
+	static void registerParameter(agentBodyParameter info){
+
+		agent.bodyInformation = info;
+		foreach(string name, params;agent.bodyInformation.partParams){
+			writeln("\t", name);
+			agent.bodyInformation.partsGenerator[name] = new elementManager(agent.bodyInformation.partParams[name].vertices, &createConvexHullShapeBody);
+		}
+
+	}
+
