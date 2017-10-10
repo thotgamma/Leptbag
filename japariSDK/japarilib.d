@@ -66,7 +66,7 @@ struct vec3{
 
 	~this(){
 		if(exported == false){
-			//entity.destroy();
+			entity.destroy();
 		}
 	}
 }
@@ -116,7 +116,7 @@ struct quat{
 
 	~this(){
 		if(exported == false){
-			//entity.destroy();
+			entity.destroy();
 		}
 	}
 }
@@ -206,7 +206,7 @@ struct univStr{
 
 	~this(){
 		if(exported == false){
-			//entity.destroy();
+			entity.destroy();
 		}
 	}
 }
@@ -282,7 +282,7 @@ struct parameterPack{
 
 	~this(){
 		if(exported == false){
-			//entity.destroy();
+			entity.destroy();
 		}
 	}
 }
@@ -354,12 +354,11 @@ class elementNode{
 	}
 	void destroy(){
 		entity.destroy();
+		exported = true;
+		entity = null;
 	}
 
 	~this(){
-		if(exported == false){
-			//entity.destroy();
-		}
 	}
 
 }
@@ -408,11 +407,13 @@ class hingeConstraint{
 	}
 	void destroy(){
 		entity.destroy();
+		exported = true;
+		entity = null;
 	}
 
 	~this(){
 		if(exported == false){
-			//entity.destroy();
+			entity.destroy();
 		}
 	}
 }
