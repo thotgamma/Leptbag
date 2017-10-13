@@ -46,9 +46,9 @@ class agent{
 
 	this(float x, float y, float z){
 
+		this.SOG.init();
 		this.spawn(Vector3f(x, y, z));
 
-		this.SOG.init();
 		//this.gene.init();
 
 		foreach(string s, dof; g6dofs){
