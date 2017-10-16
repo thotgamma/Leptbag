@@ -35,10 +35,10 @@ g6dofParam[string] g6dofParams; //g6dofのパラメータ
 class agent{
 
 	static agentBodyParameter bodyInformation;
+	Vector3f initialPos;
 	elementNode[string] parts;
 	generic6DofConstraint[string] g6dofs;
 	serialOrderGene SOG;
-	//oscillator2Gene gene; //振動子モデル+DEにおける遺伝子
 	int sequenceOfOrder; //SOG.tracksのsequenceOfOrder番目の命令を動作に用いる
 	int biologicalClock; //現在のsequenceOfOrderになってからどのくらい時間が経ったか
 
@@ -49,16 +49,13 @@ class agent{
 		this.SOG.init();
 		this.spawn(Vector3f(x, y, z));
 
-		//this.gene.init();
 
 		foreach(string s, dof; g6dofs){
 			if(agent.bodyInformation.g6dofParams[s].enabled){
 				this.SOG.init(s, agent.bodyInformation.g6dofParams[s].angLimitLower, agent.bodyInformation.g6dofParams[s].angLimitUpper);
 			}
-			//this.gene.init(s);
 		}
 
-		//this.gene.rehash();
 
 	}
 
@@ -66,6 +63,8 @@ class agent{
 	static void registerParameter(agentBodyParameter info);
 
 	void spawn(Vector3f position){
+
+		this.initialPos = position;
 
 		this.sequenceOfOrder = 0;
 		this.biologicalClock = 0;
@@ -85,39 +84,21 @@ class agent{
 
 		}
 
+		foreach(part; parts) part.setFriction(this.SOG.friction);
+
 		//6Dof
 		foreach(string s, param; agent.bodyInformation.g6dofParams){
 			if(agent.bodyInformation.g6dofParams[s].enabled){
 				g6dofs[s] = new generic6DofConstraint(parts[agent.bodyInformation.g6dofParams[s].object1Name], parts[agent.bodyInformation.g6dofParams[s].object2Name],
 						agent.bodyInformation.g6dofParams[s].object1Position, agent.bodyInformation.g6dofParams[s].object2Position,
 						agent.bodyInformation.g6dofParams[s].rotation);
-			}
-		}
-
-		parts = parts.rehash;
-		g6dofs = g6dofs.rehash;
-
-
-
-		foreach(part; parts) part.setFriction(this.SOG.friction);
-
-
-		foreach(string s, dof; g6dofs){
-
-			if(agent.bodyInformation.g6dofParams[s].enabled){
 
 				for(int i=0; i<3; i++){
 					if(agent.bodyInformation.g6dofParams[s].useAngLimit[i]) g6dofs[s].setRotationalMotor(i);
 					if(agent.bodyInformation.g6dofParams[s].useLinLimit[i]) g6dofs[s].setLinearMotor(i);
 				}
 
-
-				//for test
-				Vector3f testVector3fLow = Vector3f( -1.57/2.0, -1.57/2.0, -1.57/2.0 );
-				Vector3f testVector3fUp = Vector3f( 1.57/2.0, 1.57/2.0, 1.57/2.0 );
-
 				Vector3f zeroVector3f = Vector3f( 0.0, 0.0, 0.0 ); //セッターに同じVector3fを入れるとロック
-
 
 				//setting angular of g6dofs
 				bool useAng = true;
@@ -130,6 +111,10 @@ class agent{
 					g6dofs[s].setAngularLimit( zeroVector3f, zeroVector3f );
 				}
 
+				//最大出力．index ; (x, y, z)=(0, 1, 2)(たぶん)
+				g6dofs[s].setMaxRotationalMotorForce( 0, this.SOG.maxRotationalMotorForce);
+				g6dofs[s].setMaxRotationalMotorForce( 1, this.SOG.maxRotationalMotorForce);
+				g6dofs[s].setMaxRotationalMotorForce( 2, this.SOG.maxRotationalMotorForce);
 
 				//setting linear of g6dofs
 				bool useLin = true;
@@ -140,15 +125,17 @@ class agent{
 					g6dofs[s].setLinearLimit( zeroVector3f, zeroVector3f );
 				}
 
-				//最大出力．index ; (x, y, z)=(0, 1, 2)(たぶん)
-				g6dofs[s].setMaxRotationalMotorForce( 0, this.SOG.maxRotationalMotorForce);
-				g6dofs[s].setMaxRotationalMotorForce( 1, this.SOG.maxRotationalMotorForce);
-				g6dofs[s].setMaxRotationalMotorForce( 2, this.SOG.maxRotationalMotorForce);
+				g6dofs[s].setMaxLinearMotorForce(Vector3f(0.0f, 0.0f, 0.0f));
 
-				}
+
 
 			}
+		}
 
+
+
+			parts = parts.rehash;
+			g6dofs = g6dofs.rehash;
 
 		}
 
@@ -188,10 +175,12 @@ class agent{
 
 
 	void updateBiologicalClock(){
-		if(++this.biologicalClock==this.SOG.moveSpan[this.sequenceOfOrder]){
+		//if(++this.biologicalClock==this.SOG.moveSpan[this.sequenceOfOrder]){
+		if(++this.biologicalClock==6){
 			this.sequenceOfOrder = (++this.sequenceOfOrder)%serialOrderGene.lengthOfSet;
 			this.biologicalClock = 0;
 		}
+		//}
 	}
 
 
@@ -199,13 +188,6 @@ class agent{
 
 		if(g6dofs.length==0) return;
 
-		/*
-		writeln("wavelengthOfOrder.length:", this.SOG.wavelengthOfOrder.length, "\nsequenceOfOrder:", sequenceOfOrder, "\nbiologicalClock:", biologicalClock, "\nmoveSpan.length:", this.SOG.moveSpan.length);
-		writeln("moveSpan:", this.SOG.moveSpan);
-		writeln("wavelengthOfOrder:", this.SOG.wavelengthOfOrder);
-		*/
-
-		if(!this.SOG.wavelengthOfOrder[sequenceOfOrder][biologicalClock]) return;
 
 		foreach(string s, dof; g6dofs){
 
@@ -225,38 +207,13 @@ class agent{
 
 	}
 
-
-	/+
-	void moveWithOsci(){
-
-		//oscilは現在角度から次の駆動力を決定する
-		if(g6dofs.length!=0) foreach(string s, dof; g6dofs){
-			gene.oscil.setTheta(s, dof.getAngle(0)); //thetaがx方向の関節移動
-			gene.oscil.setPhi(s, dof.getAngle(1)); //phiがz方向の関節移動
-		}
-
-		//theta, phiは角度ではなく，単に駆動力の度合いと考えてよい
-		float[string] deltaTheta = gene.oscil.calculateDeltaTheta();
-		float[string] deltaPhi = gene.oscil.calculateDeltaPhi();
-
-		//sinでdeltaTheta, deltaPhiを-1.0~1.0にリミットしている
-		foreach(string s, dof; g6dofs) dof.setRotationalTargetVelocity( Vector3f(
-					gene.maxelo[s].getx()*sin(deltaTheta[s]), gene.maxVelo[s].gety()*sin(deltaPhi[s]), 0.0f ) );
-
 	}
-	+/
 
-
-
-
-
-	}
 
 	static void registerParameter(agentBodyParameter info){
 
 		agent.bodyInformation = info;
 		foreach(string name, params;agent.bodyInformation.partParams){
-			writeln("\t", name);
 			agent.bodyInformation.partsGenerator[name] = new elementManager(agent.bodyInformation.partParams[name].vertices, &createConvexHullShapeBody);
 		}
 

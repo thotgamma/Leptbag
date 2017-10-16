@@ -413,7 +413,7 @@ class hingeConstraint{
 
 	~this(){
 		if(exported == false){
-			entity.destroy();
+			//entity.destroy();
 		}
 	}
 }
@@ -487,11 +487,13 @@ class generic6DofConstraint{
 
 	void destroy(){
 		entity.destroy();
+		exported = true;
+		entity = null;
 	}
 
 	~this(){
 		if(exported == false){
-			entity.destroy();
+			//entity.destroy();
 		}
 	}
 

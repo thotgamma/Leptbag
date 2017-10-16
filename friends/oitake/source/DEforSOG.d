@@ -73,19 +73,23 @@ void evolveSOG(int agentNum, agent[] children, agent[] parents, float coin, floa
 
 	foreach(int j, child; children){
 		foreach(string s, dof; child.g6dofs){
-			for(uint i=0; i<child.SOG.tracks.length; i++){
 
-				int k = uniform(0, agentNum, rnd);
-				int l = uniform(0, agentNum, rnd);
-				int m = uniform(0, agentNum, rnd);
+			int k = uniform(0, agentNum, rnd);
+			int l = uniform(0, agentNum, rnd);
+			int m = uniform(0, agentNum, rnd);
 
-				if(Cr > uniform(0.0f, 1.0f, rnd)){
+			if(Cr > uniform(0.0f, 1.0f, rnd)){
+				for(uint i=0; i<child.SOG.tracks.length; i++){
 					child.SOG.tracks[i][s] = parents[k].SOG.tracks[i][s] + F * ( parents[m].SOG.tracks[i][s] - parents[l].SOG.tracks[i][s] );
-				}else{
+				}
+			}else{
 
-					if(coin > uniform(0.0f, 1.0f, rnd)){
+				if(coin > uniform(0.0f, 1.0f, rnd)){
+					for(uint i=0; i<child.SOG.tracks.length; i++){
 						child.SOG.init(s, child.bodyInformation.g6dofParams[s].angLimitLower, child.bodyInformation.g6dofParams[s].angLimitUpper);
-					}else{
+					}
+				}else{
+					for(uint i=0; i<child.SOG.tracks.length; i++){
 						child.SOG.tracks[i][s] = parents[j].SOG.tracks[i][s];
 					}
 
@@ -110,63 +114,29 @@ void evolveSOG(int agentNum, agent[] children, agent[] parents, float coin, floa
 	foreach(int j, child; children){
 
 		foreach(string s, dof; child.g6dofs){
-			for(uint i=0; i<child.SOG.tracks.length; i++){
 
-				if(Cr > uniform(0.0f, 1.0f, rnd)){
+			if(Cr > uniform(0.0f, 1.0f, rnd)){
 
 
+				for(uint i=0; i<child.SOG.tracks.length; i++){
 					child.SOG.tracks[i][s] = parents[k].SOG.tracks[i][s] + F * ( parents[m].SOG.tracks[i][s] - parents[l].SOG.tracks[i][s] );
+				}
 
-				}else{
+			}else{
 
-					if(coin > uniform(0.0f, 1.0f, rnd)){
+				if(coin > uniform(0.0f, 1.0f, rnd)){
+					for(uint i=0; i<child.SOG.tracks.length; i++){
 						child.SOG.init(s, child.bodyInformation.g6dofParams[s].angLimitLower, child.bodyInformation.g6dofParams[s].angLimitUpper);
-					}else{
+					}
+				}else{
+					for(uint i=0; i<child.SOG.tracks.length; i++){
 						child.SOG.tracks[i][s] = parents[j].SOG.tracks[i][s];
 					}
-
 				}
 
 			}
 
 		}
-
-		//writeln("j", j);
-
-
-		/*
-		if(j==0){
-			writeln("neko");
-
-			writeln("child");
-			foreach(string s, dof; child.g6dofs){
-				write(s, " ( ");
-				for(uint i=0; i<child.SOG.tracks.length; i++){
-					write(i, ": ", child.SOG.tracks[i][s].getx(), ", ");
-				}
-				writeln(")");
-			}
-
-			writeln("1");
-			foreach(string s, dof; child.g6dofs){
-				write(s, " ( ");
-				for(uint i=0; i<child.SOG.tracks.length; i++){
-					write(i, ":", parents[k].SOG.tracks[i][s].getx(), ", ");
-				}
-				writeln(")");
-			}
-
-			writeln("2");
-			foreach(string s, dof; child.g6dofs){
-				write(s, " ( ");
-				for(uint i=0; i<child.SOG.tracks.length; i++){
-					write(i, ":", parents[l].SOG.tracks[i][s].getx(), ", ");
-				}
-				writeln(")");
-			}
-		}
-		*/
-
 
 
 	}
