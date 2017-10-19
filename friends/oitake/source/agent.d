@@ -23,19 +23,20 @@ const float bodyMass = 10.0f; //動物の総体重．blender側では各パー�
 class agent{
 
 	static agentBodyParameter bodyInformation;
+	static Vector3f scoreCoeff = Vector3f(-0.3f, 0.0f, -1.0f);
 	Vector3f initialPos;
 	elementNode[string] parts;
 	generic6DofConstraint[string] g6dofs;
 	serialOrderGene SOG;
 	int sequenceOfOrder; //SOG.tracksのsequenceOfOrder番目の命令を動作に用いる
 	int biologicalClock; //現在のsequenceOfOrderになってからどのくらい時間が経ったか
-	float score; //行動評価
+	Vector3f score; //行動評価
 
 
-	this(float x, float y, float z){
+	this(float x, float y, float z, string measuredPart){
 
 		this.SOG.init();
-		this.spawn(Vector3f(x, y, z));
+		this.spawn(Vector3f(x, y, z), measuredPart);
 
 
 		foreach(string s, dof; g6dofs){
@@ -49,11 +50,15 @@ class agent{
 
 
 	static void registerParameter(agentBodyParameter info);
+	static Vector3f[] culculateAverage(agent[] agents, int agentNum, int averageOf);
+	static Vector3f[] sumScoreOnIndividual(agent[] agents, int agentNum, int averageOf);
+	static float[] culculateValue(Vector3f scores);
+	static void resetAllScores(agent[] agents);
 
-	void spawn(Vector3f position){
+
+	void spawn(Vector3f position, string measuredPart){
 
 		this.initialPos = position;
-		this.score = 0.0f;
 
 		this.sequenceOfOrder = 0;
 		this.biologicalClock = 0;
@@ -126,6 +131,8 @@ class agent{
 			parts = parts.rehash;
 			g6dofs = g6dofs.rehash;
 
+			this.score = -1.0f * this.parts[measuredPart].getPos();
+
 		}
 
 		void despawn(){
@@ -196,6 +203,20 @@ class agent{
 
 	}
 
+	void resetScore(string measuredPart){
+		this.score = -1.0f*this.parts[measuredPart].getPos();
+	}
+
+	void absScore(bool x, bool y, bool z){
+		if(x){ this.score.x = abs(this.score.x); }
+		if(y){ this.score.y = abs(this.score.y); }
+		if(z){ this.score.z = abs(this.score.z); }
+	}
+
+	void addCurrentPosition(string measuredPart){
+		this.score += this.parts[measuredPart].getPos();
+	}
+
 	}
 
 
@@ -208,3 +229,68 @@ class agent{
 
 	}
 
+	static Vector3f[] culculateAverage(agent[] agents, int agentNum, int averageOf){
+		Vector3f[] average;
+		average.length = averageOf;
+
+		for(int i=0; i<averageOf; i++){
+			average[i] = Vector3f(0.0f, 0.0f, 0.0f);
+			for(int j=0; j<agentNum; j++){
+				average[i] += agents[i*agentNum+j].score;
+			}
+			average[i] /= agentNum;
+		}
+
+		return average;
+	}
+
+
+	static Vector3f[] sumScoreOnIndividual(agent[] agents, int agentNum, int averageOf){
+		Vector3f[] scores;
+		scores.length = agentNum;
+
+		for(int i=0; i<agentNum; i++){
+			scores[i] = Vector3f(0.0f, 0.0f, 0.0f);
+			for(int j=0; j<averageOf; j++){
+				scores[i] += agents[j*agentNum+i].score;
+			}
+		}
+
+		return scores;
+	}
+
+	static int[] chooseBest(float[] value){
+		int[] bests;
+		bests.length = 3;
+		bests[] = 0;
+
+		float[] valueTmp;
+		valueTmp.length = value.length;
+		valueTmp[] =value[];
+		sort!("a > b")(valueTmp);
+		for(int i=0; i<value.length; i++){
+			if( value[i] == valueTmp[0] ){ bests[0] = i; }
+			else if( value[i] == valueTmp[1] ){ bests[1] = i; }
+			else if( value[i] == valueTmp[2] ){ bests[2] = i; }
+		}
+
+		return bests;
+	}
+
+	static float[] culculateValue(Vector3f[] scores){
+		float[] value;
+		value.length = scores.length;
+		value[] = 0.0f;
+
+		for(int i=0; i<value.length; i++){
+			value[i] = agent.scoreCoeff.x * scores[i].x + agent.scoreCoeff.y * scores[i].y + agent.scoreCoeff.z * scores[i].z;
+		}
+
+		return value;
+	}
+
+	static void resetAllScores(agent[] agents, string measuredPart){
+		foreach(int i, ref elem; agents){
+			agents[i].resetScore(measuredPart);
+		}
+	}
