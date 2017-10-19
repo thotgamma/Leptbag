@@ -6,8 +6,10 @@ elementNode::elementNode(int id, elementManager* parent, btRigidBody* body, vec3
 
 elementNode::~elementNode(){
 	dynamicsWorld->removeRigidBody(body);
+	/*
 	delete body->getMotionState();
 	delete body;
+	*/
 }
 
 float elementNode::getXpos() const {

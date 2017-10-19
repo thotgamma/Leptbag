@@ -12,16 +12,14 @@ import dlib.math.vector;
 import dlib.math.quaternion;
 
 import agent;
-//import DEforOscillator2;
 import DEforSOG;
-//import Oscillator;
 import params;
 import loadJson;
 
 
 const int agentNum = 30;
-const int averageOf = 3; //一世代averageOf回の試行を行いその平均をスコアとする
-const float bodyMass = 5.0f; //動物の総体重．blender側では各パーツに百分率で質量を付与．
+const int averageOf = 6; //一世代averageOf回の試行を行いその平均をスコアとする
+const float bodyMass = 10.0f; //動物の総体重．blender側では各パーツに百分率で質量を付与．
 const float personalSpace = 5.0f; //動物を並べる間隔
 const string measuredPart = "head"; //この名前のパーツの移動距離を測る
 
@@ -100,8 +98,9 @@ const int trialSpan = 500; //一試行の長さ
 
 int generation = 0; //世代を記録する
 bool evaluation = false; //trueならDEの突然変異体評価フェイズ
-float Cr = 0.9f; //Crの確率で親の遺伝子を引き継ぐ
-float coinForRandomMutation = 0.3f; //(1.0-Cr)*coinForRandomMutationの確率で遺伝子要素がランダムに突然変異．
+float Cr = 0.8f; //Crの確率で親の遺伝子を引き継ぐ
+float coinForRandomMutation = 0.1f; //(1.0-Cr)*coinForRandomMutationの確率で遺伝子要素がランダムに突然変異．
+float coeffWind = 0.5f;
 
 extern (C) void tick(){
 
@@ -111,6 +110,8 @@ extern (C) void tick(){
 		timerDivisor++;
 		//運動する
 		updateAgentsClock();
+		//writeln("clock : ", agents[0].biologicalClock);
+		//writeln("sequence : ", agents[0].sequenceOfOrder);
 	}
 
 	if(time%12==0){
@@ -185,15 +186,15 @@ void terminateTrial(){
 		foreach(int i, ref elem; agents){
 
 			//移動距離を記録
-			preScores[i] += abs(elem.parts[measuredPart].getPos().z);
-			preScores[i] -= abs(elem.initialPos.x - elem.parts[measuredPart].getPos().x);
+			preScores[i] += -1.0f*(elem.parts[measuredPart].getPos().z);
+			preScores[i] -= coeffWind * abs(elem.initialPos.x - elem.parts[measuredPart].getPos().x);
 
 
 
 
 			for(int k=1; k<=averageOf; k++){
 				if(i<agentNum*k){
-					averageScore[k-1] += abs(elem.parts[measuredPart].getPos().z);
+					averageScore[k-1] += -1.0f*(elem.parts[measuredPart].getPos().z);
 					break;
 				}
 			}
@@ -210,12 +211,12 @@ void terminateTrial(){
 
 		foreach(int i, ref elem; evaluateds){
 
-			evaluatedsScores[i] += abs(elem.parts[measuredPart].getPos().z);
-			evaluatedsScores[i] -= abs( elem.initialPos.x - elem.parts[measuredPart].getPos().x);
+			evaluatedsScores[i] += -1.0f*(elem.parts[measuredPart].getPos().z);
+			evaluatedsScores[i] -= coeffWind * abs( elem.initialPos.x - elem.parts[measuredPart].getPos().x);
 
 			for(int k=1; k<=averageOf; k++){
 				if(i<agentNum*k){
-					averageScore[k-1] += abs(elem.parts[measuredPart].getPos().z);
+					averageScore[k-1] += -1.0f*(elem.parts[measuredPart].getPos().z);
 					break;
 				}
 			}
@@ -236,13 +237,14 @@ void terminateTrial(){
 void displayGenerationResult(float proscoretmp, float[] averagescore){
 
 	//今回の世代の最高記録
-	writeln("		top score of this generation : ", proscoretmp);
+	writeln("	top score of this generation : ", proscoretmp);
 
+	writeln("average scores at each trial");
 	for(int k=0; k<averageOf; k++){
 
-		writeln("\n>		trial ", k, ":\n");
+		write("		>trial ", k, " : ");
 		//今試行の平均移動距離を表示
-		writeln("			average score : ", averagescore[k]/to!float(agentNum));
+		writeln(averagescore[k]/to!float(agentNum));
 
 	}
 
@@ -250,7 +252,7 @@ void displayGenerationResult(float proscoretmp, float[] averagescore){
 	//最高記録が出たら記録，表示
 	if(proscoretmp>topScore){
 		topScore = proscoretmp;
-		writeln("!			top score ever! : ", topScore);
+		writeln("!	top score ever! : ", topScore);
 	}
 
 
@@ -325,7 +327,7 @@ void terminateGeneration(){
 
 			//DEに用いるパラメータ
 			auto rnd = Random(unpredictableSeed);
-			float ditherF = uniform(0.5f, 1.0f, rnd);
+			float ditherF = uniform(0.0f, 0.5f, rnd);
 			//突然変異
 			//evolveBest(evaluateds[0..agentNum], agents[0..agentNum], 0.1f, ditherF, bests);
 			evolveSOG(agentNum, evaluateds[0..agentNum], agents[0..agentNum], coinForRandomMutation, Cr, ditherF, bests);
@@ -348,7 +350,7 @@ void terminateGeneration(){
 
 			//DEに用いるパラメータ
 			auto rnd = Random(unpredictableSeed);
-			float ditherF = uniform(0.5f, 1.0f, rnd);
+			float ditherF = uniform(0.0f, 0.5f, rnd);
 			//突然変異
 			evolveSOG(agentNum, evaluateds[0..agentNum], agents[0..agentNum], coinForRandomMutation, Cr, ditherF, bests);
 

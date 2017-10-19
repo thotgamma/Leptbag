@@ -10,8 +10,6 @@ import dlib.math.vector;
 import dlib.math.quaternion;
 
 import agent;
-//import DEforOscillator2;
-//import Oscillator;
 import params;
 
 Random rnd;
@@ -124,17 +122,19 @@ void evolveSOG(int agentNum, agent[] children, agent[] parents, float coin, floa
 
 			}else{
 
-				if(coin > uniform(0.0f, 1.0f, rnd)){
-					for(uint i=0; i<child.SOG.tracks.length; i++){
-						child.SOG.init(s, child.bodyInformation.g6dofParams[s].angLimitLower, child.bodyInformation.g6dofParams[s].angLimitUpper);
-					}
-				}else{
-					for(uint i=0; i<child.SOG.tracks.length; i++){
-						child.SOG.tracks[i][s] = parents[j].SOG.tracks[i][s];
-					}
+
+				for(uint i=0; i<child.SOG.tracks.length; i++){
+					child.SOG.tracks[i][s] = parents[j].SOG.tracks[i][s];
 				}
 
 			}
+
+			for(uint i=0; i<child.SOG.tracks.length; i++){
+				if(coin > uniform(0.0f, 1.0f, rnd)){
+					child.SOG.init(i, s, child.bodyInformation.g6dofParams[s].angLimitLower, child.bodyInformation.g6dofParams[s].angLimitUpper);
+				}
+			}
+
 
 		}
 

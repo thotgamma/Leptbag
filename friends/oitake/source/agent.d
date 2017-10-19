@@ -10,8 +10,6 @@ import japariSDK.japarilib;
 import dlib.math.vector;
 import dlib.math.quaternion;
 
-//import DEforOscillator2;
-//import Oscillator;
 import params;
 import loadJson;
 
@@ -19,16 +17,6 @@ Random rnd;
 
 
 const float bodyMass = 10.0f; //動物の総体重．blender側では各パーツに百分率で質量を付与．
-
-
-/*
-elementManager[string] partsGenerator;
-
-
-//fpmからの読取用
-partParam[string] partParams; //身体パーツのパラメータ
-g6dofParam[string] g6dofParams; //g6dofのパラメータ
-*/
 
 
 
@@ -41,7 +29,7 @@ class agent{
 	serialOrderGene SOG;
 	int sequenceOfOrder; //SOG.tracksのsequenceOfOrder番目の命令を動作に用いる
 	int biologicalClock; //現在のsequenceOfOrderになってからどのくらい時間が経ったか
-
+	float score; //行動評価
 
 
 	this(float x, float y, float z){
@@ -65,6 +53,7 @@ class agent{
 	void spawn(Vector3f position){
 
 		this.initialPos = position;
+		this.score = 0.0f;
 
 		this.sequenceOfOrder = 0;
 		this.biologicalClock = 0;
@@ -142,13 +131,13 @@ class agent{
 		void despawn(){
 			foreach(string s, part; parts){
 				part.destroy();
-		}
-		foreach(string s, dofs; g6dofs){
-			if(agent.bodyInformation.g6dofParams[s].enabled){
-				dofs.destroy();
+			}
+			foreach(string s, dofs; g6dofs){
+				if(agent.bodyInformation.g6dofParams[s].enabled){
+					dofs.destroy();
+				}
 			}
 		}
-	}
 
 
 

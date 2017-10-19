@@ -10,8 +10,6 @@ import japariSDK.japarilib;
 import dlib.math.vector;
 import dlib.math.quaternion;
 
-//import Oscillator;
-
 
 struct agentBodyParameter{
 	elementManager[string] partsGenerator;
@@ -76,7 +74,7 @@ struct g6dofParam{
 //遺伝させるパラメータ
 struct serialOrderGene{
 
-	static uint lengthOfSet = 4;
+	static uint lengthOfSet = 6;
 	Vector3f[string][] tracks;
 	bool[][] wavelengthOfOrder;
 	int[] moveSpan;
