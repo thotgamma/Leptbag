@@ -72,14 +72,14 @@ class agent{
 		foreach(string s, partsGen; agent.bodyInformation.partsGenerator){
 
 			parts[s] = partsGen.generate(
-						parameterPack(
-							param("position", (agent.bodyInformation.partParams[s].position + position) ),
-							param("scale",    agent.bodyInformation.partParams[s].scale),
-							param("rotation", agent.bodyInformation.partParams[s].rotation),
-							param("model",    agent.bodyInformation.partParams[s].vertices),
-							param("mass",agent.bodyInformation.partParams[s].mass * bodyMass)
+					parameterPack(
+						param("position", (agent.bodyInformation.partParams[s].position + position) ),
+						param("scale",    agent.bodyInformation.partParams[s].scale),
+						param("rotation", agent.bodyInformation.partParams[s].rotation),
+						param("model",    agent.bodyInformation.partParams[s].vertices),
+						param("mass",agent.bodyInformation.partParams[s].mass * bodyMass)
 						)
-						);
+					);
 
 		}
 
@@ -128,10 +128,8 @@ class agent{
 
 
 
+				}
 			}
-		}
-
-
 
 			parts = parts.rehash;
 			g6dofs = g6dofs.rehash;
@@ -219,6 +217,7 @@ class agent{
 	}
 
 	void addCurrentPosition(string measuredPart){
+		//writeln(this.score, " : ", this.parts[measuredPart].getPos());
 		this.score += this.parts[measuredPart].getPos();
 	}
 
@@ -306,7 +305,6 @@ class agent{
 		for(int i=0; i<agentNum; i++){
 			for(int j=1; j<averageOf; j++){
 				agents[agentNum*j+i].copyGene(agents[i]);
-				agents[agentNum*j+i].score = agents[i].score;
 			}
 		}
 
@@ -337,7 +335,6 @@ class agent{
 		}
 		writeln("employment rate of the evaluateds : ", employmentRate/to!float(agentNum));
 
-		shareGeneAmongGroup(agents, agentNum, averageOf);
 		sortAgentsOnScoreZ(agents, agentNum, averageOf);
 		shareGeneAmongGroup(agents, agentNum, averageOf);
 
@@ -411,6 +408,8 @@ class agent{
 			}
 		}
 
+		+/
+			/+
 		for(int i=0; i<agentNum-1; i++){
 			if(agents[i].score.z>agents[i+1].score.z){
 				writeln(i);

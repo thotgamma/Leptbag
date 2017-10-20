@@ -157,7 +157,6 @@ void moveAgents(){
 //一試行が終わるたびに実行する処理
 void terminateTrial(){
 
-
 	float proScoreTmp = -1000.0f; //この世代の最高移動距離
 	float[] averageScore;
 	averageScore.length = averageOf;
@@ -195,6 +194,8 @@ void terminateTrial(){
 
 
 	}
+
+
 
 	terminateGeneration();
 
