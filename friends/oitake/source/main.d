@@ -58,11 +58,7 @@ extern (C) void init(){
 	writeln("made main groups of ", averageOf, " (", agentNum, " agents in each group)");
 
 
-	for(int i=0; i<agentNum; i++){
-		for(int j=1; j<averageOf; j++){
-			agents[agentNum*j+i].copyGene(agents[i]);
-		}
-	}
+	agent.shareGeneAmongGroup(agents, agentNum, averageOf);
 
 	writeln("shared gene among main groups");
 
@@ -85,31 +81,23 @@ void prepareAgentsGroup(agent[] group, agentBodyParameter information){
 //毎ステップ実行される--------------------
 
 float topScore = -1000.0f; //動物たちは-z方向に歩いていることに注意
-/+
-float[] preScores; //突然変異によってより大きく移動すれば突然変異体を採用
-float[] evaluatedsScores; //突然変異群のスコアを管理
-+/
-
 //そのステップ内で行うべき処理を決定するための変数
 int time = 0; //時計
-int timerDivisor = 0; //定期的に実行する処理のためのカウンタ
-const int moveSpan = 12; //timerDivisorがこの値になるごとに上記処理実行
+int generation = 0; //世代を記録する
+bool evaluation = false; //trueならDEの突然変異体評価フェイズ
 
 const int generationStroke = 0; //一世代毎にgenerationStrokeだけ長い時間の試行を行うようになる
 const int trialSpan = 500; //一試行の長さ
 
-int generation = 0; //世代を記録する
-bool evaluation = false; //trueならDEの突然変異体評価フェイズ
+
 float Cr = 0.9f; //Crの確率で親の遺伝子を引き継ぐ
 float coinForRandomMutation = 0.1f; //(1.0-Cr)*coinForRandomMutationの確率で遺伝子要素がランダムに突然変異．
-float coeffWind = 0.05f;
 
 extern (C) void tick(){
 
 	time++;
 
 	if(time%2==0){
-		timerDivisor++;
 		//運動する
 		updateAgentsClock();
 		//writeln("clock : ", agents[0].biologicalClock);
@@ -127,7 +115,6 @@ extern (C) void tick(){
 		writeln();
 
 		time = 0;
-		timerDivisor = 0;
 		terminateTrial();
 	}
 
@@ -176,42 +163,15 @@ void terminateTrial(){
 	averageScore.length = averageOf;
 	averageScore[] = 0.0f;
 
-	/+
-	if(generation==0){
-		preScores.length = agentNum*averageOf;
-		evaluatedsScores.length = agentNum*averageOf;
-	}
-	preScores[] = 0.0f;
-	evaluatedsScores[] = 0.0f;
-	+/
 
 	if(!evaluation){ //各個体の移動距離を測るフェイズ
 
 		foreach(int i, ref elem; agents){
 
-			/+
-			//移動距離を記録
-			preScores[i] += -1.0f*(elem.parts[measuredPart].getPos().z);
-			preScores[i] -= coeffWind * abs(elem.initialPos.x - elem.parts[measuredPart].getPos().x);
-			+/
-
-
 			agents[i].addCurrentPosition(measuredPart);
 			agents[i].absScore(true, false, false);
 
-
-
-			/+
-			for(int k=1; k<=averageOf; k++){
-				if(i<agentNum*k){
-					averageScore[k-1] += -1.0f*(elem.parts[measuredPart].getPos().z);
-					break;
-				}
-			}
-			+/
-
 			proScoreTmp = max( -1.0*agents[i].score.z, proScoreTmp );
-
 
 		}
 
@@ -223,22 +183,9 @@ void terminateTrial(){
 
 		foreach(int i, ref elem; evaluateds){
 
-			/+
-			evaluatedsScores[i] += -1.0f*(elem.parts[measuredPart].getPos().z);
-			evaluatedsScores[i] -= coeffWind * abs( elem.initialPos.x - elem.parts[measuredPart].getPos().x);
-			+/
 			
 			evaluateds[i].addCurrentPosition(measuredPart);
 			evaluateds[i].absScore(true, false, false);
-
-			/+
-			for(int k=1; k<=averageOf; k++){
-				if(i<agentNum*k){
-					averageScore[k-1] += -1.0f*(elem.parts[measuredPart].getPos().z);
-					break;
-				}
-			}
-			+/
 
 			proScoreTmp = max( -1.0*evaluateds[i].score.z, proScoreTmp );
 
@@ -260,26 +207,7 @@ void displayGenerationResult(agent[] group, float proscoretmp){
 	writeln("	top proceeding of this generation : ", proscoretmp);
 
 	writeln("average scores at each trial");
-
-	/+
-	write("scores : [ ");
-	for(int i=0; i<agentNum; i++){
-		write(group[i].score, ", ");
-	}
-	writeln(" ] ");
-	+/
-
-
 	writeln( culculateAverage(agents, agentNum, averageOf) );
-	/+
-	for(int k=0; k<averageOf; k++){
-
-		write("		>trial ", k, " : ");
-		//今試行の平均移動距離を表示
-		writeln(averagescore[k]/to!float(agentNum));
-
-	}
-	+/
 
 	//最高記録が出たら記録，表示
 	if(proscoretmp>topScore){
@@ -287,6 +215,10 @@ void displayGenerationResult(agent[] group, float proscoretmp){
 		writeln("!	top proceeding ever! : ", topScore);
 	}
 
+
+	for(int i=0; i<5; i++){
+		writeln("agents[", i, "].score.z : ", agents[i].score.z);
+	}
 
 }
 
@@ -304,56 +236,16 @@ void terminateGeneration(){
 
 	if(!evaluation){ //各個体の移動距離を測るフェイズ
 
-		/*
-		for(int k=0; k<agentNum; k++){
-			for(int l=1; l<averageOf; l++){
-				preScores[k] += preScores[agentNum*l+k];
-			}
-		}
-		*/
 
-		/+
-		for(int k=1; k<averageOf; k++){
-			preScores[0..agentNum] += preScores[agentNum*k..agentNum*(k+1)];
-		}
-		+/
 		Vector3f[] scores = agent.sumScoreOnIndividual(agents, agentNum, averageOf);
-
 
 		//agentsは一旦退場
 		foreach(int i, elem; agents){
 			elem.despawn();
 		}
 
-
 		float[] value = culculateValue(scores);
 		int[] bests = chooseBest(value);
-		/+
-		//最良3個体を記録
-		int[] bests = [ 0, 0, 0 ];
-		float[] scoresTmp;
-		scoresTmp.length = agentNum;
-		scoresTmp[] = preScores[0..agentNum];
-		sort!("a > b")(scoresTmp);
-		for(int i=0; i<agentNum; i++){
-			if( preScores[i] == scoresTmp[0] ) bests[0] = i;
-			else if( preScores[i] == scoresTmp[1] ) bests[1] = i;
-			else if( preScores[i] == scoresTmp[2] ) bests[2] = i;
-		}
-		+/
-
-
-		/+ 
-		//最良個体を選べているか確認
-		writeln("preScores : ", preScores[0.. agentNum]);
-		writeln("sorted preScores : ", scoresTmp);
-		for(int k=0; k<3; k++){
-			writeln("best", k, " : no.", bests[k], " : ", preScores[bests[k]]);
-		}
-		+/
-
-		//writeln("preScores: ", preScores);
-		//for(int k=0; k<3; k++) writeln(bests[k], " : ", preScores[bests[k]]);
 
 		if(generation==0){ //最初に評価用の犬たちevaluatedsをつくる
 
@@ -381,57 +273,13 @@ void terminateGeneration(){
 		//突然変異
 		evolveSOG(agentNum, evaluateds[0..agentNum], agents[0..agentNum], coinForRandomMutation, Cr, ditherF, bests);
 
-
-		for(int i=0; i<agentNum; i++){
-			for(int j=1; j<averageOf; j++){
-				evaluateds[agentNum*j+i].copyGene(evaluateds[i]);
-			}
-		}
+		agent.shareGeneAmongGroup(evaluateds, agentNum, averageOf);
 
 		evaluation = true; //次は突然変異体評価フェイズ
 
 	}else{ //突然変異体を評価するフェイズ
 
-		float employmentRate = 0.0f; //突然変異個体採用率
-
-
-		/+
-		write("scores : [ ");
-		for(int i=0; i<agentNum*averageOf; i++){
-			write(agents[i].score, ", ");
-		}
-		writeln(" ] ");
-		+/
-
-		Vector3f[] scoresMain = agent.sumScoreOnIndividual(agents, agentNum, averageOf);
-		//writeln("scoresMain", scoresMain);
-		float[] valueMain = culculateValue(scoresMain);
-		//writeln("valueMain", valueMain);
-
-		Vector3f[] scoresEval = agent.sumScoreOnIndividual(evaluateds, agentNum, averageOf);
-		float[] valueEval = culculateValue(scoresEval);
-
-		for(int i=0; i<agentNum; i++){
-
-			//もし突然変異した各個体が前回の同じindexの個体より良い性能なら採用
-			//writeln("evalScore[", i, "]=", evaluatedsScores[i], ", preScore[", i, "]=", preScores[i]);
-			Random rnd = Random(unpredictableSeed);
-			float coin = uniform(0.0f, 1.0f, rnd);
-			if( (coin < 0.1f)||( valueEval[i] > valueMain[i] ) ){//  evaluatedsScores[i] > preScores[i] ) ){
-				employmentRate += 1.0f;
-				agents[i].copyGene(evaluateds[i]);
-			}
-
-		}
-
-		for(int i=0; i<agentNum; i++){
-			for(int j=1; j<averageOf; j++){
-				agents[agentNum*j+i].copyGene(agents[i]);
-			}
-		}
-
-
-		writeln("employment rate of the evaluateds : ", employmentRate/to!float(agentNum));
+		agent.evaluateEvolution(agents, evaluateds, agentNum, averageOf);
 
 		//突然変異体は一旦退場
 		foreach(int i, ref elem; evaluateds) elem.despawn();

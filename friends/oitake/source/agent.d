@@ -33,6 +33,18 @@ class agent{
 	Vector3f score; //行動評価
 
 
+	static void registerParameter(agentBodyParameter info);
+	static Vector3f[] culculateAverage(agent[] agents, int agentNum, int averageOf);
+	static Vector3f[] sumScoreOnIndividual(agent[] agents, int agentNum, int averageOf);
+	static float[] culculateValue(Vector3f scores);
+	static void resetAllScores(agent[] agents);
+	static void shareGeneAmongGroup(agent[] agents, int agentNum, int averageOf);
+	static void evaluationOfEvolution(agent[] agents, agent[] evaluateds, int agentNum, int averageOf);
+	static void sortAgentsOnScore(agent[] agents);
+	static void swapTracks(agent one, agent two);
+	static void swapScores(agent one, agent two);
+
+
 	this(float x, float y, float z, string measuredPart){
 
 		this.SOG.init();
@@ -47,13 +59,6 @@ class agent{
 
 
 	}
-
-
-	static void registerParameter(agentBodyParameter info);
-	static Vector3f[] culculateAverage(agent[] agents, int agentNum, int averageOf);
-	static Vector3f[] sumScoreOnIndividual(agent[] agents, int agentNum, int averageOf);
-	static float[] culculateValue(Vector3f scores);
-	static void resetAllScores(agent[] agents);
 
 
 	void spawn(Vector3f position, string measuredPart){
@@ -245,7 +250,7 @@ class agent{
 	}
 
 
-	static Vector3f[] sumScoreOnIndividual(agent[] agents, int agentNum, int averageOf){
+	static Vector3f[] sumScoreOnIndividual(ref agent[] agents, int agentNum, int averageOf){
 		Vector3f[] scores;
 		scores.length = agentNum;
 
@@ -293,4 +298,145 @@ class agent{
 		foreach(int i, ref elem; agents){
 			agents[i].resetScore(measuredPart);
 		}
+	}
+
+
+	static void shareGeneAmongGroup(ref agent[] agents, int agentNum, int averageOf){
+
+		for(int i=0; i<agentNum; i++){
+			for(int j=1; j<averageOf; j++){
+				agents[agentNum*j+i].copyGene(agents[i]);
+				agents[agentNum*j+i].score = agents[i].score;
+			}
+		}
+
+	}
+
+
+	static void evaluateEvolution(ref agent[] agents, ref agent[] evaluateds, int agentNum, int averageOf){
+
+		float employmentRate = 0.0f; //突然変異個体採用率
+
+		Vector3f[] scoresMain = sumScoreOnIndividual(agents, agentNum, averageOf);
+		float[] valueMain = culculateValue(scoresMain);
+
+		Vector3f[] scoresEval = sumScoreOnIndividual(evaluateds, agentNum, averageOf);
+		float[] valueEval = culculateValue(scoresEval);
+
+		for(int i=0; i<agentNum; i++){
+
+			//もし突然変異した各個体が前回の同じindexの個体より良い性能なら採用
+			Random rnd = Random(unpredictableSeed);
+			float coin = uniform(0.0f, 1.0f, rnd);
+			if( (coin < 0.1f)||( valueEval[i] > valueMain[i] ) ){
+				employmentRate += 1.0f;
+				agents[i].copyGene(evaluateds[i]);
+				agents[i].score = evaluateds[i].score;
+			}
+
+		}
+		writeln("employment rate of the evaluateds : ", employmentRate/to!float(agentNum));
+
+		shareGeneAmongGroup(agents, agentNum, averageOf);
+		sortAgentsOnScoreZ(agents, agentNum, averageOf);
+		shareGeneAmongGroup(agents, agentNum, averageOf);
+
+	}
+
+
+	static void sortAgentsOnScoreZ(ref agent[] agents, int agentNum, int  averageOf){
+
+		/+
+		writeln("buma");
+		writeln(agents[0].score.z);
+		writeln(agents[0].SOG.tracks);
+		writeln(agents[agentNum].score.z);
+		writeln(agents[agentNum].SOG.tracks);
+		writeln(agents[agentNum*2].score.z);
+		writeln(agents[agentNum*2].SOG.tracks);
+		+/
+			/+
+		for(int i=0; i<agentNum; i++){
+			for(int j=1; j<averageOf; j++){
+				agents[i].score += agents[j*agentNum+i].score;
+			}
+		}
+		+/
+
+		float[] scoreZ;
+		scoreZ.length = agentNum;
+		for(int i=0; i<scoreZ.length; i++){
+			scoreZ[i] = agents[i].score.z;//scores[i].z;
+		}
+		sort!("a < b")(scoreZ);
+
+		//i番目のスコアをもつagentのindexを取得
+		//そのスコアをもつagentをi番目に格納．i番目にいたagentはそのagentがいた場所に．
+		for(int i=0; i<agentNum-1; i++){
+
+			int index = -1;
+			for(int j=0; j<agentNum; j++){
+				if(scoreZ[i]==agents[j].score.z){
+					index = j;
+					break;
+				}
+			}
+
+			swapTracks(agents[i], agents[index]);
+			swapScores(agents[i], agents[index]);
+		}
+
+		/+
+		for(int i=0; i<agentNum-1; i++){
+			if(agents[i].score.z==agents[i+1].score.z){
+				writeln("bumanyan");
+			}
+		}
+
+		for(int i=0; i<agentNum; i++){
+			for(int j=0; j<agentNum; j++){
+				if(i!=j){
+					if(scoreZ[i]==scoreZ[j]){
+						writeln("exist same");
+					}
+				}
+			}
+		}
+		+/
+			/+
+		for(int i=0; i<scoreZ.length; i++){
+			if(scoreZ[i]!=agents[i].score.z){
+				writeln("tsurakibi");
+				assert(0);
+			}
+		}
+
+		for(int i=0; i<agentNum-1; i++){
+			if(agents[i].score.z>agents[i+1].score.z){
+				writeln(i);
+				writeln(agents[i].score.z, " : ", agents[i+1].score.z);
+				writeln("assert(0)");
+				assert(0);
+			}
+		}
+		+/
+
+		writeln("sorted agents on their evaluated score.z");
+
+	}
+
+
+	static void swapTracks(agent one, agent two){
+		Vector3f[string][] tmp;
+		tmp = one.SOG.tracks;
+		one.SOG.tracks = two.SOG.tracks;
+		two.SOG.tracks = tmp;
+
+	}
+
+	static void swapScores(agent one, agent two){
+		Vector3f tmp;
+		tmp = one.score;
+		one.score = two.score;
+		two.score = tmp;
 	}

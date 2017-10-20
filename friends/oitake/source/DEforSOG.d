@@ -14,6 +14,91 @@ import params;
 
 Random rnd;
 
+//best
+void evolveSOG(int agentNum, agent[] children, agent[] parents, float coin, float Cr, float F, int[] bests){
+
+	auto rnd = Random(unpredictableSeed);
+
+	int k = bests[0];
+	int l = bests[1];
+	int m = bests[2];
+
+	foreach(int j, child; children){
+
+		foreach(string s, dof; child.g6dofs){
+
+			if(Cr > uniform(0.0f, 1.0f, rnd)){
+
+
+				for(uint i=0; i<child.SOG.tracks.length; i++){
+					child.SOG.tracks[i][s] = parents[k].SOG.tracks[i][s] + F * ( parents[m].SOG.tracks[i][s] - parents[l].SOG.tracks[i][s] );
+				}
+
+			}else{
+
+
+				for(uint i=0; i<child.SOG.tracks.length; i++){
+					child.SOG.tracks[i][s] = parents[j].SOG.tracks[i][s];
+				}
+
+			}
+
+			for(uint i=0; i<child.SOG.tracks.length; i++){
+				if(coin > uniform(0.0f, 1.0f, rnd)){
+					child.SOG.init(i, s, child.bodyInformation.g6dofParams[s].angLimitLower, child.bodyInformation.g6dofParams[s].angLimitUpper);
+				}
+			}
+
+
+		}
+
+
+	}
+
+
+}
+
+
+//rand
+void evolveSOG(int agentNum, agent[] children, agent[] parents, float coin, float Cr, float F){
+
+	auto rnd = Random(unpredictableSeed);
+
+	foreach(int j, child; children){
+		foreach(string s, dof; child.g6dofs){
+
+			int k = uniform(0, agentNum, rnd);
+			int l = uniform(0, agentNum, rnd);
+			int m = uniform(0, agentNum, rnd);
+
+			if(Cr > uniform(0.0f, 1.0f, rnd)){
+				for(uint i=0; i<child.SOG.tracks.length; i++){
+					child.SOG.tracks[i][s] = parents[k].SOG.tracks[i][s] + F * ( parents[m].SOG.tracks[i][s] - parents[l].SOG.tracks[i][s] );
+				}
+			}else{
+
+				if(coin > uniform(0.0f, 1.0f, rnd)){
+					for(uint i=0; i<child.SOG.tracks.length; i++){
+						child.SOG.init(s, child.bodyInformation.g6dofParams[s].angLimitLower, child.bodyInformation.g6dofParams[s].angLimitUpper);
+					}
+				}else{
+					for(uint i=0; i<child.SOG.tracks.length; i++){
+						child.SOG.tracks[i][s] = parents[j].SOG.tracks[i][s];
+					}
+
+				}
+
+			}
+		}
+	}
+
+}
+
+
+
+
+
+
 void simpleSOG(agent[] children, agent[] parents, float Cr, float F, int[] bests){
 
 	auto rnd = Random(unpredictableSeed);
@@ -64,82 +149,3 @@ void simpleSOG(agent[] children, agent[] parents, float Cr, float F, int[] bests
 }
 
 
-//rand
-void evolveSOG(int agentNum, agent[] children, agent[] parents, float coin, float Cr, float F){
-
-	auto rnd = Random(unpredictableSeed);
-
-	foreach(int j, child; children){
-		foreach(string s, dof; child.g6dofs){
-
-			int k = uniform(0, agentNum, rnd);
-			int l = uniform(0, agentNum, rnd);
-			int m = uniform(0, agentNum, rnd);
-
-			if(Cr > uniform(0.0f, 1.0f, rnd)){
-				for(uint i=0; i<child.SOG.tracks.length; i++){
-					child.SOG.tracks[i][s] = parents[k].SOG.tracks[i][s] + F * ( parents[m].SOG.tracks[i][s] - parents[l].SOG.tracks[i][s] );
-				}
-			}else{
-
-				if(coin > uniform(0.0f, 1.0f, rnd)){
-					for(uint i=0; i<child.SOG.tracks.length; i++){
-						child.SOG.init(s, child.bodyInformation.g6dofParams[s].angLimitLower, child.bodyInformation.g6dofParams[s].angLimitUpper);
-					}
-				}else{
-					for(uint i=0; i<child.SOG.tracks.length; i++){
-						child.SOG.tracks[i][s] = parents[j].SOG.tracks[i][s];
-					}
-
-				}
-
-			}
-		}
-	}
-
-}
-
-
-//best
-void evolveSOG(int agentNum, agent[] children, agent[] parents, float coin, float Cr, float F, int[] bests){
-
-	auto rnd = Random(unpredictableSeed);
-
-	int k = bests[0];
-	int l = bests[1];
-	int m = bests[2];
-
-	foreach(int j, child; children){
-
-		foreach(string s, dof; child.g6dofs){
-
-			if(Cr > uniform(0.0f, 1.0f, rnd)){
-
-
-				for(uint i=0; i<child.SOG.tracks.length; i++){
-					child.SOG.tracks[i][s] = parents[k].SOG.tracks[i][s] + F * ( parents[m].SOG.tracks[i][s] - parents[l].SOG.tracks[i][s] );
-				}
-
-			}else{
-
-
-				for(uint i=0; i<child.SOG.tracks.length; i++){
-					child.SOG.tracks[i][s] = parents[j].SOG.tracks[i][s];
-				}
-
-			}
-
-			for(uint i=0; i<child.SOG.tracks.length; i++){
-				if(coin > uniform(0.0f, 1.0f, rnd)){
-					child.SOG.init(i, s, child.bodyInformation.g6dofParams[s].angLimitLower, child.bodyInformation.g6dofParams[s].angLimitUpper);
-				}
-			}
-
-
-		}
-
-
-	}
-
-
-}
