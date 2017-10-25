@@ -50,13 +50,11 @@ class agent{
 		this.SOG.init();
 		this.spawn(Vector3f(x, y, z), measuredPart);
 
-
 		foreach(string s, dof; g6dofs){
 			if(agent.bodyInformation.g6dofParams[s].enabled){
 				this.SOG.init(s, agent.bodyInformation.g6dofParams[s].angLimitLower, agent.bodyInformation.g6dofParams[s].angLimitUpper);
 			}
 		}
-
 
 	}
 
@@ -149,77 +147,86 @@ class agent{
 			}
 		}
 
-
-
-	void copyGene(agent parent){
-		//this.gene = parent.gene;
-		this.SOG.tracks = parent.SOG.tracks;
-	}
-
-
-	void checkSOG(){
-
-		writeln("check SOG");
-		foreach(string s, dof; g6dofs){
-			if(s=="Constraint"){
-				writeln(s);
-				for(int i=0; i<SOG.tracks.length; i++){
-					write("\t", i, " : (");
-					writeln(SOG.tracks[i][s]);
+		bool hasSameTracks(agent u){
+			foreach(int i, c; this.SOG.tracks){
+				foreach(string s, r; c){
+					if(this.SOG.tracks[i][s]!=u.SOG.tracks[i][s]){
+						return false;
+					}
 				}
 			}
+			return true;
 		}
 
-	}
-
-
-	void updateBiologicalClock(){
-		//if(++this.biologicalClock==this.SOG.moveSpan[this.sequenceOfOrder]){
-		if(++this.biologicalClock==6){
-			this.sequenceOfOrder = (++this.sequenceOfOrder)%serialOrderGene.lengthOfSet;
-			this.biologicalClock = 0;
-		}
-		//}
-	}
-
-
-	void moveWithSerialOrder(){
-
-		if(g6dofs.length==0) return;
-
-
-		foreach(string s, dof; g6dofs){
-
-			Vector3f currentAngle = Vector3f(dof.getAngle(0), dof.getAngle(1), dof.getAngle(2));
-
-			dof.setRotationalTargetVelocity(
-					Vector3f(
-						this.SOG.maxVelocity[sequenceOfOrder][s].x
-						*(SOG.tracks[sequenceOfOrder][s].x - currentAngle.x),
-						this.SOG.maxVelocity[sequenceOfOrder][s].y
-						*(SOG.tracks[sequenceOfOrder][s].y - currentAngle.y),
-						this.SOG.maxVelocity[sequenceOfOrder][s].z
-						*(SOG.tracks[sequenceOfOrder][s].z - currentAngle.z)
-						)
-					);
+		void copyGene(agent parent){
+			//this.gene = parent.gene;
+			this.SOG.tracks = parent.SOG.tracks;
 		}
 
-	}
 
-	void resetScore(string measuredPart){
-		this.score = -1.0f*this.parts[measuredPart].getPos();
-	}
+		void checkSOG(){
 
-	void absScore(bool x, bool y, bool z){
-		if(x){ this.score.x = abs(this.score.x); }
-		if(y){ this.score.y = abs(this.score.y); }
-		if(z){ this.score.z = abs(this.score.z); }
-	}
+			writeln("check SOG");
+			foreach(string s, dof; g6dofs){
+				if(s=="Constraint"){
+					writeln(s);
+					for(int i=0; i<SOG.tracks.length; i++){
+						write("\t", i, " : (");
+						writeln(SOG.tracks[i][s]);
+					}
+				}
+			}
 
-	void addCurrentPosition(string measuredPart){
-		//writeln(this.score, " : ", this.parts[measuredPart].getPos());
-		this.score += this.parts[measuredPart].getPos();
-	}
+		}
+
+
+		void updateBiologicalClock(){
+			//if(++this.biologicalClock==this.SOG.moveSpan[this.sequenceOfOrder]){
+			if(++this.biologicalClock==6){
+				this.sequenceOfOrder = (++this.sequenceOfOrder)%serialOrderGene.lengthOfSet;
+				this.biologicalClock = 0;
+			}
+			//}
+		}
+
+
+		void moveWithSerialOrder(){
+
+			if(g6dofs.length==0) return;
+
+
+			foreach(string s, dof; g6dofs){
+
+				Vector3f currentAngle = Vector3f(dof.getAngle(0), dof.getAngle(1), dof.getAngle(2));
+
+				dof.setRotationalTargetVelocity(
+						Vector3f(
+							this.SOG.maxVelocity[sequenceOfOrder][s].x
+							*(SOG.tracks[sequenceOfOrder][s].x - currentAngle.x),
+							this.SOG.maxVelocity[sequenceOfOrder][s].y
+							*(SOG.tracks[sequenceOfOrder][s].y - currentAngle.y),
+							this.SOG.maxVelocity[sequenceOfOrder][s].z
+							*(SOG.tracks[sequenceOfOrder][s].z - currentAngle.z)
+							)
+						);
+			}
+
+		}
+
+		void resetScore(string measuredPart){
+			this.score = -1.0f*this.parts[measuredPart].getPos();
+		}
+
+		void absScore(bool x, bool y, bool z){
+			if(x){ this.score.x = abs(this.score.x); }
+			if(y){ this.score.y = abs(this.score.y); }
+			if(z){ this.score.z = abs(this.score.z); }
+		}
+
+		void addCurrentPosition(string measuredPart){
+			//writeln(this.score, " : ", this.parts[measuredPart].getPos());
+			this.score += this.parts[measuredPart].getPos();
+		}
 
 	}
 
@@ -344,7 +351,7 @@ class agent{
 	static void sortAgentsOnScoreZ(ref agent[] agents, int agentNum, int  averageOf){
 
 		/+
-		writeln("buma");
+			writeln("buma");
 		writeln(agents[0].score.z);
 		writeln(agents[0].SOG.tracks);
 		writeln(agents[agentNum].score.z);
@@ -353,11 +360,11 @@ class agent{
 		writeln(agents[agentNum*2].SOG.tracks);
 		+/
 			/+
-		for(int i=0; i<agentNum; i++){
-			for(int j=1; j<averageOf; j++){
-				agents[i].score += agents[j*agentNum+i].score;
+			for(int i=0; i<agentNum; i++){
+				for(int j=1; j<averageOf; j++){
+					agents[i].score += agents[j*agentNum+i].score;
+				}
 			}
-		}
 		+/
 
 		float[] scoreZ;
@@ -384,11 +391,11 @@ class agent{
 		}
 
 		/+
-		for(int i=0; i<agentNum-1; i++){
-			if(agents[i].score.z==agents[i+1].score.z){
-				writeln("bumanyan");
+			for(int i=0; i<agentNum-1; i++){
+				if(agents[i].score.z==agents[i+1].score.z){
+					writeln("bumanyan");
+				}
 			}
-		}
 
 		for(int i=0; i<agentNum; i++){
 			for(int j=0; j<agentNum; j++){
@@ -401,26 +408,26 @@ class agent{
 		}
 		+/
 			/+
-		for(int i=0; i<scoreZ.length; i++){
-			if(scoreZ[i]!=agents[i].score.z){
-				writeln("tsurakibi");
-				assert(0);
+			for(int i=0; i<scoreZ.length; i++){
+				if(scoreZ[i]!=agents[i].score.z){
+					writeln("tsurakibi");
+					assert(0);
+				}
 			}
-		}
 
 		+/
 			/+
-		for(int i=0; i<agentNum-1; i++){
-			if(agents[i].score.z>agents[i+1].score.z){
-				writeln(i);
-				writeln(agents[i].score.z, " : ", agents[i+1].score.z);
-				writeln("assert(0)");
-				assert(0);
+			for(int i=0; i<agentNum-1; i++){
+				if(agents[i].score.z>agents[i+1].score.z){
+					writeln(i);
+					writeln(agents[i].score.z, " : ", agents[i+1].score.z);
+					writeln("assert(0)");
+					assert(0);
+				}
 			}
-		}
 		+/
 
-		writeln("sorted agents on their evaluated score.z");
+			writeln("sorted agents on their evaluated score.z");
 
 	}
 

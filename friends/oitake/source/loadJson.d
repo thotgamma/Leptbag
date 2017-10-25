@@ -98,7 +98,6 @@ void loadHinge(ref hingeParam[string] hingeParams){
 
 
 			}
-
 		}
 	}catch(Exception ex){
 		writeln(ex.toString);

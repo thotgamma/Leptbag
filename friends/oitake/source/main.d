@@ -17,8 +17,8 @@ import params;
 import loadJson;
 
 
-const int agentNum = 60;
-const int averageOf = 3; //一世代averageOf回の試行を行いその平均をスコアとする
+const int agentNum = 40;
+const int averageOf = 5; //一世代averageOf回の試行を行いその平均をスコアとする
 const float bodyMass = 10.0f; //動物の総体重．blender側では各パーツに百分率で質量を付与．
 const float personalSpace = 5.0f; //動物を並べる間隔
 const string measuredPart = "head"; //この名前のパーツの移動距離を測る
@@ -34,36 +34,26 @@ agentBodyParameter info;
 //initialize--------------------------------
 
 extern (C) void init(){
-
 	rt_init();
 	Random(unpredictableSeed);
 	writeln("start initialization model:oitake");
 
-
 	//jsonからload
 	loadMesh(info.partParams);
 	loadG6dof(info.g6dofParams);
-
 	writeln("loaded data from .json");
-
 	info.partParams = info.partParams.rehash;
 	info.g6dofParams = info.g6dofParams.rehash;
 
-
 	//agents生成
 	agents.length = agentNum*averageOf;
-
 	prepareAgentsGroup(agents, info);
-
 	writeln("made main groups of ", averageOf, " (", agentNum, " agents in each group)");
 
-
 	agent.shareGeneAmongGroup(agents, agentNum, averageOf);
-
 	writeln("shared gene among main groups");
 
 	writeln("start simulation");
-
 }
 
 void prepareAgentsGroup(agent[] group, agentBodyParameter information){
@@ -71,8 +61,11 @@ void prepareAgentsGroup(agent[] group, agentBodyParameter information){
 
 	agent.registerParameter(information);
 
-	foreach(int i, ref elem; group){
-		group[i] = new agent(to!float(i)*personalSpace, 0.0f, -1.0f, measuredPart);
+	for(int i=0; i<averageOf; i++){
+		for(int j=0; j<agentNum; j++){
+			group[j + i*agentNum]
+				= new agent(to!float(j)*personalSpace, 0.0f, -1.0f + i*personalSpace, measuredPart);
+		}
 	}
 
 }
@@ -217,9 +210,19 @@ void displayGenerationResult(agent[] group, float proscoretmp){
 	}
 
 
-	for(int i=0; i<5; i++){
+	for(int i=0; i<0; i++){
 		writeln("agents[", i, "].score.z : ", agents[i].score.z);
 	}
+
+	/+
+	for(int i=0; i<averageOf; i++){
+		write("group", i, "[ ");
+		for(int j=0; j<agentNum; j++){
+			write(agents[j+i*agentNum].score.z, ", ");
+		}
+		writeln("]");
+	}
+	+/
 
 }
 
@@ -251,8 +254,15 @@ void terminateGeneration(){
 		if(generation==0){ //最初に評価用の犬たちevaluatedsをつくる
 
 			evaluateds.length = agentNum*averageOf;
+
+			for(int i=0; i<averageOf; i++){
+				for(int j=0; j<agentNum; j++){
+					evaluateds[j + i*agentNum]
+						= new agent(to!float(j)*personalSpace, 0.0f, -1.0f + i*personalSpace, measuredPart);
+				}
+			}
+
 			foreach(int i, ref elem; evaluateds){
-				elem = new agent(to!float(i)*personalSpace, 0.0f, 0.0f, measuredPart);
 				elem.copyGene(agents[i]);
 			}
 
@@ -262,8 +272,11 @@ void terminateGeneration(){
 		}else{ //1世代以降
 
 			//evaluatedsをpop
-			foreach(int i, ref elem; evaluateds){
-				elem.spawn(Vector3f(to!float(i)*personalSpace, 0.0f, 0.0f), measuredPart);
+			for(int i=0; i<averageOf; i++){
+				for(int j=0; j<agentNum; j++){
+					evaluateds[j + i*agentNum].spawn(
+							Vector3f(to!float(j)*personalSpace, 0.0f, -1.0f + i*personalSpace), measuredPart);
+				}
 			}
 
 		}
@@ -284,7 +297,12 @@ void terminateGeneration(){
 
 		//突然変異体は一旦退場
 		foreach(int i, ref elem; evaluateds) elem.despawn();
-		foreach(int i, ref elem; agents) elem.spawn(Vector3f(to!float(i)*personalSpace, 0.0f, 0.0f), measuredPart);
+			for(int i=0; i<averageOf; i++){
+				for(int j=0; j<agentNum; j++){
+					agents[j + i*agentNum].spawn(
+							Vector3f(to!float(j)*personalSpace, 0.0f, -1.0f + i*personalSpace), measuredPart);
+				}
+			}
 
 		evaluation = false; //次は採用した突然変異体を混ぜて性能評価
 
