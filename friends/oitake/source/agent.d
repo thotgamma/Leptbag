@@ -86,8 +86,11 @@ class agent{
 		//6Dof
 		foreach(string s, param; agent.bodyInformation.g6dofParams){
 			if(agent.bodyInformation.g6dofParams[s].enabled){
-				g6dofs[s] = new generic6DofConstraint(parts[agent.bodyInformation.g6dofParams[s].object1Name], parts[agent.bodyInformation.g6dofParams[s].object2Name],
-						agent.bodyInformation.g6dofParams[s].object1Position, agent.bodyInformation.g6dofParams[s].object2Position,
+				g6dofs[s] = new generic6DofConstraint(
+						parts[agent.bodyInformation.g6dofParams[s].object1Name],
+						parts[agent.bodyInformation.g6dofParams[s].object2Name],
+						agent.bodyInformation.g6dofParams[s].object1Position,
+						agent.bodyInformation.g6dofParams[s].object2Position,
 						agent.bodyInformation.g6dofParams[s].rotation);
 
 				for(int i=0; i<3; i++){
