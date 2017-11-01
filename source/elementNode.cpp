@@ -33,10 +33,36 @@ float elementNode::getZpos() const {
 	return pos.getZ();
 }
 
-quat elementNode::getOrientation() const{
-	btQuaternion orient = this->body->getOrientation();
+float elementNode::getOrientationW() const{
+	btTransform transform;
+	body->getMotionState()->getWorldTransform(transform);
+	btQuaternion orient = transform.getRotation();
 
-	return quat(orient.getAngle(), orient.getAxis().getX(), orient.getAxis().getY(), orient.getAxis().getZ());
+	return orient.getAngle();
+}
+
+float elementNode::getOrientationX() const{
+	btTransform transform;
+	body->getMotionState()->getWorldTransform(transform);
+	btQuaternion orient = transform.getRotation();
+
+	return orient.getAxis().getX();
+}
+
+float elementNode::getOrientationY() const{
+	btTransform transform;
+	body->getMotionState()->getWorldTransform(transform);
+	btQuaternion orient = transform.getRotation();
+
+	return orient.getAxis().getY();
+}
+
+float elementNode::getOrientationZ() const{
+	btTransform transform;
+	body->getMotionState()->getWorldTransform(transform);
+	btQuaternion orient = transform.getRotation();
+
+	return orient.getAxis().getZ();
 }
 
 float elementNode::getBasis(int row, int column) const {

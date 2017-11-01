@@ -12,7 +12,10 @@ class elementNode_interface{
 	virtual float getXpos() const = 0;
 	virtual float getYpos() const = 0;
 	virtual float getZpos() const = 0;
-	virtual quat getOrientation() const = 0;
+	virtual float getOrientationW() const = 0;
+	virtual float getOrientationX() const = 0;
+	virtual float getOrientationY() const = 0;
+	virtual float getOrientationZ() const = 0;
 	virtual float getBasis(int row, int column) const = 0;
 	virtual float getFriction() const = 0;
 	virtual void setFriction(float coef) = 0;
@@ -35,7 +38,10 @@ class elementNode : public elementNode_interface{
 	virtual float getXpos() const;
 	virtual float getYpos() const;
 	virtual float getZpos() const;
-	virtual quat getOrientation() const;
+	virtual float getOrientationW() const;
+	virtual float getOrientationX() const;
+	virtual float getOrientationY() const;
+	virtual float getOrientationZ() const;
 	virtual float getBasis(int row, int column) const;
 	virtual float getFriction() const;
 	virtual void setFriction(float coef);

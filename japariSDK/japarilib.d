@@ -323,6 +323,10 @@ extern (C++){
 		float getXpos();
 		float getYpos();
 		float getZpos();
+		float getOrientationW();
+		float getOrientationX();
+		float getOrientationY();
+		float getOrientationZ();
 		float getBasis(int row, int column);
 		float getFriction();
 		void setFriction(float coef);
@@ -343,9 +347,19 @@ class elementNode{
 	Vector3f getPos(){
 		return Vector3f(entity.getXpos(), entity.getYpos(), entity.getZpos());
 	}
+
+	Quaternionf getOrientation(){
+		return Quaternionf(
+				this.entity.getOrientationW(),
+				this.entity.getOrientationX(),
+				this.entity.getOrientationY(),
+				this.entity.getOrientationZ());
+	}
+
 	float getBasis(int row, int column){
 		return entity.getBasis(row, column);
 	}
+
 	float getFriction(){
 		return entity.getFriction();
 	}

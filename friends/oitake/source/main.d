@@ -98,6 +98,7 @@ extern (C) void tick(){
 	}
 
 	if(time%12==0){
+		if(!evaluation) writeln(agents[0].parts["head"].getOrientation());
 		//運動する
 		moveAgents();
 	}
