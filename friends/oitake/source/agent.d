@@ -343,7 +343,7 @@ class agent{
 			}
 
 		}
-		writeln("employment rate of the evaluateds : ", employmentRate/to!float(agentNum));
+		writeln("\temployment rate of the evaluateds : ", employmentRate/to!float(agentNum));
 
 		sortAgentsOnScoreZ(agents, agentNum, averageOf);
 		shareGeneAmongGroup(agents, agentNum, averageOf);
@@ -430,7 +430,7 @@ class agent{
 			}
 		+/
 
-			writeln("sorted agents on their evaluated score.z");
+			writeln("\tsorted agents on their evaluated score.z");
 
 	}
 

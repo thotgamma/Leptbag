@@ -33,6 +33,12 @@ float elementNode::getZpos() const {
 	return pos.getZ();
 }
 
+quat elementNode::getOrientation() const{
+	btQuaternion orient = this->body->getOrientation();
+
+	return quat(orient.getAngle(), orient.getAxis().getX(), orient.getAxis().getY(), orient.getAxis().getZ());
+}
+
 float elementNode::getBasis(int row, int column) const {
 	btTransform transform;
 	//transform = body->getCenterOfMassTransform();

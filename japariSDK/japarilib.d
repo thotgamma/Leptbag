@@ -483,9 +483,11 @@ class generic6DofConstraint{
 	}
 
 	void destroy(){
-		entity.destroy();
-		exported = true;
-		entity = null;
+		if(!exported){
+			entity.destroy();
+			exported = true;
+			entity = null;
+		}
 	}
 
 	~this(){

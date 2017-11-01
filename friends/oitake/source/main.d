@@ -200,8 +200,8 @@ void displayGenerationResult(agent[] group, float proscoretmp){
 	//今回の世代の最高記録
 	writeln("	top proceeding of this generation : ", proscoretmp);
 
-	writeln("average scores at each trial");
-	writeln( culculateAverage(agents, agentNum, averageOf) );
+	writeln("\taverage scores at each trial\n");
+	writeln("\t", culculateAverage(agents, agentNum, averageOf) );
 
 	//最高記録が出たら記録，表示
 	if(proscoretmp>topScore){
