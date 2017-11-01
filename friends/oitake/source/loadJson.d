@@ -126,10 +126,13 @@ void loadG6dof(ref g6dofParam[string] g6dofParams){
 
 				g6dofParams[name].position = Vector3f(to!float(elem["xpos"].str), to!float(elem["ypos"].str), to!float(elem["zpos"].str));
 				g6dofParams[name].rotation = Quaternionf(elem["wqat"].floating, elem["xqat"].floating, elem["yqat"].floating, elem["zqat"].floating);
+
 				g6dofParams[name].object1Name = elem["object1"].str;
 				g6dofParams[name].object2Name = elem["object2"].str;
+
 				g6dofParams[name].object1Position = Vector3f(elem["object1xpos"].floating, elem["object1ypos"].floating, elem["object1zpos"].floating);
 				g6dofParams[name].object2Position = Vector3f(elem["object2xpos"].floating, elem["object2ypos"].floating, elem["object2zpos"].floating);
+
 				if(elem["useXAngLimit"].str == "True") g6dofParams[name].useAngLimit[0]= true; else g6dofParams[name].useAngLimit[0] = false;
 				if(elem["useYAngLimit"].str == "True") g6dofParams[name].useAngLimit[1]= true; else g6dofParams[name].useAngLimit[1] = false;
 				if(elem["useZAngLimit"].str == "True") g6dofParams[name].useAngLimit[2]= true; else g6dofParams[name].useAngLimit[2] = false;

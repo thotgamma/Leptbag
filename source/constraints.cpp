@@ -62,21 +62,29 @@ generic6DofConstraint::generic6DofConstraint(elementNode* elemA_rawp, elementNod
 
 	// それぞれの物体の重心を原点としてローカル座標をとる。
 	btTransform frameInA, frameInB;
+	frameInA = btTransform::getIdentity();
+	frameInB = btTransform::getIdentity();
+
+	//2017/10/27現在，全てのオブジェクトは変換行列を既に適用された状態で渡されるので，変換行列はidentityでよい．
+	/*
 	frameInA = elemA_rawp->getBody()->getCenterOfMassTransform();
 	frameInB = elemB_rawp->getBody()->getCenterOfMassTransform();
 
+	//回転角度をthとして，Q = [ cos(th/2); x*sin(th/2), y*sin(th/2), z*sin(th/2) ]が(x, y, z)を軸とした回転を表すクォータニオン
+	//(x, y, z)は正規化されていなければならない
 	btQuaternion quatToBullet = btQuaternion(sin(-M_PI/4),0,0,cos(-M_PI/4));
 	frameInA.setRotation(frameInA.getRotation().inverse() * rotation->toBullet() * quatToBullet);
 	frameInB.setRotation(frameInB.getRotation().inverse() * rotation->toBullet() * quatToBullet);
+	*/
 
 	// デフォルトの関節の接点をローカル座標で指定する
 	frameInA.setOrigin(positionA->toBullet());
 	frameInB.setOrigin(positionB->toBullet());
 
 	// 6Dofを生成
-	//最後のboolはangularLimit, linearLimtitをAのローカル座標内で規定するならtrue．B内ならfalse．(たぶん．以下参照)
+	//最後のboolはlinearLimtitをAのローカル座標内で規定するならtrue．B内ならfalse．(たぶん．以下参照)
 	//https://gamedev.stackexchange.com/questions/54349/what-are-frame-a-and-frame-b-in-btgeneric6dofconstraints-constructor-for
-	gen6Dof = new btGeneric6DofConstraint(*(elemA_rawp->getBody()), *(elemB_rawp->getBody()), frameInA, frameInB, false);
+	gen6Dof = new btGeneric6DofConstraint(*(elemA_rawp->getBody()), *(elemB_rawp->getBody()), frameInA, frameInB, true);
 
 	//elemAとelemBの衝突判定を無効にする
 	//new btGeneric6dofConstraintの後に実行しないと働かない
