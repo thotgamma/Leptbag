@@ -350,10 +350,10 @@ class elementNode{
 
 	Quaternionf getOrientation(){
 		return Quaternionf(
-				this.entity.getOrientationW(),
 				this.entity.getOrientationX(),
 				this.entity.getOrientationY(),
-				this.entity.getOrientationZ());
+				this.entity.getOrientationZ(),
+				this.entity.getOrientationW());
 	}
 
 	float getBasis(int row, int column){

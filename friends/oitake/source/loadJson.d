@@ -125,7 +125,7 @@ void loadG6dof(ref g6dofParam[string] g6dofParams){
 				else g6dofParams[name].enabled = false;
 
 				g6dofParams[name].position = Vector3f(to!float(elem["xpos"].str), to!float(elem["ypos"].str), to!float(elem["zpos"].str));
-				g6dofParams[name].rotation = Quaternionf(elem["wqat"].floating, elem["xqat"].floating, elem["yqat"].floating, elem["zqat"].floating);
+				g6dofParams[name].rotation = Quaternionf(elem["xqat"].floating, elem["yqat"].floating, elem["zqat"].floating, elem["wqat"].floating);
 
 				g6dofParams[name].object1Name = elem["object1"].str;
 				g6dofParams[name].object2Name = elem["object2"].str;

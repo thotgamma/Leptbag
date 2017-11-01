@@ -64,7 +64,7 @@ void prepareAgentsGroup(agent[] group, agentBodyParameter information){
 	for(int i=0; i<averageOf; i++){
 		for(int j=0; j<agentNum; j++){
 			group[j + i*agentNum]
-				= new agent(to!float(j)*personalSpace, 0.0f, -1.0f + i*personalSpace, measuredPart);
+				= new agent(to!float(j)*personalSpace, 0.0f, -10.0f + to!float(i)*personalSpace, measuredPart);
 		}
 	}
 
@@ -98,7 +98,14 @@ extern (C) void tick(){
 	}
 
 	if(time%12==0){
-		if(!evaluation) writeln(agents[0].parts["head"].getOrientation());
+		if(!evaluation){
+			agents[0].gravityDirection = Vector3f(0.0f, -1.0f, 0.0f);
+			agents[0].eyeDirection = Vector3f(0.0f, 0.0f, -1.0f);
+			write(agents[0].parts["head"].getOrientation().conjugate().rotate(agents[0].gravityDirection).normalized());
+			writeln(", ", agents[0].parts["head"].getOrientation().rotate(agents[0].eyeDirection).normalized());
+			agents[0].gravityDirection = Vector3f(0.0f, -1.0f, 0.0f);
+			agents[0].eyeDirection = Vector3f(0.0f, 0.0f, -1.0f);
+		}
 		//運動する
 		moveAgents();
 	}

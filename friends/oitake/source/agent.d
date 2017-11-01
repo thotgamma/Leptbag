@@ -25,6 +25,8 @@ class agent{
 	static agentBodyParameter bodyInformation;
 	static Vector3f scoreCoeff = Vector3f(-0.3f, 0.0f, -1.0f);
 	Vector3f initialPos;
+	Vector3f gravityDirection;
+	Vector3f eyeDirection;
 	elementNode[string] parts;
 	generic6DofConstraint[string] g6dofs;
 	serialOrderGene SOG;
@@ -62,6 +64,8 @@ class agent{
 	void spawn(Vector3f position, string measuredPart){
 
 		this.initialPos = position;
+		this.gravityDirection = Vector3f(0.0f, -1.0f, 0.0f);
+		this.eyeDirection = Vector3f(0.0f, 0.0f, -1.0f);
 
 		this.sequenceOfOrder = 0;
 		this.biologicalClock = 0;
