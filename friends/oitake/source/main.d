@@ -17,8 +17,8 @@ import params;
 import loadJson;
 
 
-const int agentNum = 40;
-const int averageOf = 5; //一世代averageOf回の試行を行いその平均をスコアとする
+const int agentNum = 1;
+const int averageOf = 1; //一世代averageOf回の試行を行いその平均をスコアとする
 const float bodyMass = 10.0f; //動物の総体重．blender側では各パーツに百分率で質量を付与．
 const float personalSpace = 5.0f; //動物を並べる間隔
 const string measuredPart = "head"; //この名前のパーツの移動距離を測る
@@ -86,25 +86,39 @@ const int trialSpan = 500; //一試行の長さ
 float Cr = 0.9f; //Crの確率で親の遺伝子を引き継ぐ
 float coinForRandomMutation = 0.1f; //(1.0-Cr)*coinForRandomMutationの確率で遺伝子要素がランダムに突然変異．
 
+int clock = 0;
 extern (C) void tick(){
 
-	time++;
 
-	if(time%2==0){
-		//運動する
-		updateAgentsClock();
-		//writeln("clock : ", agents[0].biologicalClock);
-		//writeln("sequence : ", agents[0].sequenceOfOrder);
+	agents[0].moveManually(clock);
+	if(time==0){
+		write(clock, " : ");
+		clock = (clock+1)%4;
+		agents[0].gravityDirection = Vector3f(0.0f, -1.0f, 0.0f);
+		agents[0].eyeDirection = Vector3f(0.0f, 0.0f, -1.0f);
+
+		write(agents[0].parts["head"].getRotation(), ", ");
+		write(agents[0].parts["head"].getRotation().conjugate().rotate(agents[0].gravityDirection).normalized());
+		writeln(", ", agents[0].parts["head"].getRotation().rotate(agents[0].eyeDirection).normalized());
+
+		agents[0].gravityDirection = Vector3f(0.0f, -1.0f, 0.0f);
+		agents[0].eyeDirection = Vector3f(0.0f, 0.0f, -1.0f);
 	}
+
+	time = (++time)%100;
+
+	/+
+
+		if(time%2==0){
+			//運動する
+			updateAgentsClock();
+			//writeln("clock : ", agents[0].biologicalClock);
+			//writeln("sequence : ", agents[0].sequenceOfOrder);
+		}
 
 	if(time%12==0){
 		if(!evaluation){
-			agents[0].gravityDirection = Vector3f(0.0f, -1.0f, 0.0f);
-			agents[0].eyeDirection = Vector3f(0.0f, 0.0f, -1.0f);
-			write(agents[0].parts["head"].getOrientation().conjugate().rotate(agents[0].gravityDirection).normalized());
-			writeln(", ", agents[0].parts["head"].getOrientation().rotate(agents[0].eyeDirection).normalized());
-			agents[0].gravityDirection = Vector3f(0.0f, -1.0f, 0.0f);
-			agents[0].eyeDirection = Vector3f(0.0f, 0.0f, -1.0f);
+
 		}
 		//運動する
 		moveAgents();
@@ -118,6 +132,7 @@ extern (C) void tick(){
 		time = 0;
 		terminateTrial();
 	}
+	+/
 
 }
 
