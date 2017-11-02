@@ -207,7 +207,12 @@ class agent{
 			foreach(string s, dof; g6dofs){
 
 				Vector3f currentAngle = Vector3f(dof.getAngle(0), dof.getAngle(1), dof.getAngle(2));
-				Vector3f goal = Vector3f(-3.141592f/2.0f*to!float(clock)+3.141592f, 0.0f, 0.0f);
+				//writeln("currentAngle : ", currentAngle);
+				float goalAngle = -3.141592f + 3.141592f/2.0f*to!float((clock+2)%4);
+
+
+				Vector3f goal = Vector3f(goalAngle, 0.0f, 0.0f);
+				//writeln("goal : ", goal);
 				//writeln("\t",3.141592f/2.0f*to!float(clock) );
 				Vector3f maxVel = Vector3f(10.0f, 10.0f, 10.0f);
 

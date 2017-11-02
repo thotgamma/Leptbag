@@ -13,6 +13,9 @@ class elementNode_interface{
 	virtual float getYpos() const = 0;
 	virtual float getZpos() const = 0;
 	virtual float getRotationAngle() const = 0;
+	virtual float getRotationAxisX() const = 0;
+	virtual float getRotationAxisY() const = 0;
+	virtual float getRotationAxisZ() const = 0;
 	virtual float getRotationW() const = 0;
 	virtual float getRotationX() const = 0;
 	virtual float getRotationY() const = 0;
@@ -40,6 +43,9 @@ class elementNode : public elementNode_interface{
 	virtual float getYpos() const;
 	virtual float getZpos() const;
 	virtual float getRotationAngle() const;
+	virtual float getRotationAxisX() const;
+	virtual float getRotationAxisY() const;
+	virtual float getRotationAxisZ() const;
 	virtual float getRotationW() const;
 	virtual float getRotationX() const;
 	virtual float getRotationY() const;

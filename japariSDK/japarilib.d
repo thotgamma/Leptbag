@@ -325,6 +325,9 @@ extern (C++){
 		float getYpos();
 		float getZpos();
 		float getRotationAngle();
+		float getRotationAxisX();
+		float getRotationAxisY();
+		float getRotationAxisZ();
 		float getRotationW();
 		float getRotationX();
 		float getRotationY();
@@ -350,12 +353,18 @@ class elementNode{
 		return Vector3f(entity.getXpos(), entity.getYpos(), entity.getZpos());
 	}
 
+	float getRotationAngle(){
+		return this.entity.getRotationAngle();
+	}
+
+
+
 	Quaternionf getRotation(){
 		float cosAngle = sin(this.entity.getRotationAngle());
 		return Quaternionf(
-				this.entity.getRotationX()*cosAngle,
-				this.entity.getRotationY()*cosAngle,
-				this.entity.getRotationZ()*cosAngle,
+				this.entity.getRotationX(),
+				this.entity.getRotationY(),
+				this.entity.getRotationZ(),
 				this.entity.getRotationW());
 	}
 

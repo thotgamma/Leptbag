@@ -92,17 +92,21 @@ extern (C) void tick(){
 
 	agents[0].moveManually(clock);
 	if(time==0){
-		write(clock, " : ");
-		clock = (clock+1)%4;
+
 		agents[0].gravityDirection = Vector3f(0.0f, -1.0f, 0.0f);
 		agents[0].eyeDirection = Vector3f(0.0f, 0.0f, -1.0f);
 
+		write(agents[0].parts["head"].getRotationAngle(), ", ");
 		write(agents[0].parts["head"].getRotation(), ", ");
 		write(agents[0].parts["head"].getRotation().conjugate().rotate(agents[0].gravityDirection).normalized());
 		writeln(", ", agents[0].parts["head"].getRotation().rotate(agents[0].eyeDirection).normalized());
 
 		agents[0].gravityDirection = Vector3f(0.0f, -1.0f, 0.0f);
 		agents[0].eyeDirection = Vector3f(0.0f, 0.0f, -1.0f);
+
+		clock = (clock+1)%4;
+		write(clock, " : ");
+
 	}
 
 	time = (++time)%100;
