@@ -25,6 +25,8 @@ class agent{
 	static agentBodyParameter bodyInformation;
 	static Vector3f scoreCoeff = Vector3f(-0.3f, 0.0f, -1.0f);
 	Vector3f initialPos;
+	const initialGravityDirection = Vector3f(0.0f, -1.0f, 0.0f);
+	const initialEyeDirection = Vector3f(0.0f, 0.0f, -1.0f);
 	Vector3f gravityDirection;
 	Vector3f eyeDirection;
 	elementNode[string] parts;
@@ -64,13 +66,12 @@ class agent{
 	void spawn(Vector3f position, string measuredPart){
 
 		this.initialPos = position;
-		this.gravityDirection = Vector3f(0.0f, -1.0f, 0.0f);
-		this.eyeDirection = Vector3f(0.0f, 0.0f, -1.0f);
+		this.gravityDirection = initialGravityDirection;
+		this.eyeDirection = initialEyeDirection;
 
 		this.sequenceOfOrder = 0;
 		this.biologicalClock = 0;
 
-		agent.bodyInformation.partParams["anker"].mass = 0.0f;
 
 		//身体パーツ
 		foreach(string s, partsGen; agent.bodyInformation.partsGenerator){
@@ -156,6 +157,14 @@ class agent{
 			}
 		}
 
+
+		//somatosensory:体性感覚
+		void updateSomatoSensory(){
+			this.gravityDirection = this.parts["head"].getRotation().conjugate().rotate(this.initialGravityDirection).normalized();
+			this.eyeDirection = this.parts["head"].getRotation().rotate(this.initialEyeDirection).normalized();
+		}
+
+
 		bool hasSameTracks(agent u){
 			foreach(int i, c; this.SOG.tracks){
 				foreach(string s, r; c){
@@ -228,6 +237,8 @@ class agent{
 						);
 			}
 
+			this.updateSomatoSensory();
+
 		}
 
 		void moveWithSerialOrder(){
@@ -251,6 +262,8 @@ class agent{
 							)
 						);
 			}
+
+			this.updateSomatoSensory();
 
 		}
 
