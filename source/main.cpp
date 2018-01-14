@@ -92,6 +92,10 @@ glm::vec3 lightColor = glm::vec3(1, 1, 1);
 float lightPower = 1.0f;
 glm::vec3 lightDirection = glm::vec3(-1, 1, 0);
 
+float camx = 0;
+float camy = 0;
+float camz = 0;
+
 
 std::vector<std::string> split(const std::string &str, char sep) {
 	std::vector<std::string> v;
@@ -116,6 +120,10 @@ extern "C" int requestCameraAccess(void (*func)(void)) {
 
 
 extern "C" void updateCamera(float posx, float posy, float posz, float horizAng, float vertAng, float FoV) {
+
+	camx = posx;
+	camy = posy;
+	camz = posz;
 
 	Dl_info info;
 	dladdr(__builtin_return_address(0), &info);
@@ -430,7 +438,7 @@ int main() {
 		// Use our shader
 		glUseProgram(depthProgramID);
 
-		glm::vec3 lightPosition = glm::vec3(position.x, 0, position.z);
+		glm::vec3 lightPosition = glm::vec3(camx, 0, camz);
 
 		// Compute the VP matrix from the light's point of view
 		glm::mat4 depthProjectionMatrix = glm::ortho<float>(-16,16,-16,16,-20,20);
