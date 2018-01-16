@@ -287,10 +287,10 @@ int main() {
 	GLuint depthMatrixID = glGetUniformLocation(depthProgramID, "depthMV");
 
 	// The framebuffer, which regroups 0, 1, or more textures, and 0 or 1 depth buffer.
-	GLuint FramebufferName;
-	glGenFramebuffers(1, &FramebufferName);
+	GLuint shadowMapFrameBuffer;
+	glGenFramebuffers(1, &shadowMapFrameBuffer);
 
-	glBindFramebuffer(GL_FRAMEBUFFER, FramebufferName);
+	glBindFramebuffer(GL_FRAMEBUFFER, shadowMapFrameBuffer);
 
 	// Depth texture. Slower than a depth buffer, but you can sample it later in your shader
 	GLuint depthTexture;
@@ -424,7 +424,7 @@ int main() {
 		// まずはデプスバッファを作る
 
 		// Render to our framebuffer
-		glBindFramebuffer(GL_FRAMEBUFFER, FramebufferName);
+		glBindFramebuffer(GL_FRAMEBUFFER, shadowMapFrameBuffer);
 		glViewport(0,0,shadowMapBufferSize,shadowMapBufferSize); // Render on the whole framebuffer, complete from the lower left corner to the upper right
 
 		// We don't use bias in the shader, but instead we draw back faces, 
