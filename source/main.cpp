@@ -60,9 +60,6 @@ GLuint uniform_shadowmap3;
 btDiscreteDynamicsWorld* dynamicsWorld;
 
 
-btDiscreteDynamicsWorld* dynamicsWorld;
-
-
 std::vector<void (*)()> pluginInitVector;
 std::vector<void (*)()> pluginTickVector;
 
@@ -439,7 +436,6 @@ int main() {
 	//フォント描画モジュールの初期化
 	font::setup();
 
-
 	//ロードされるダイナミックライブラリのリスト
 	std::vector<void*> dllList;
 
@@ -490,9 +486,6 @@ int main() {
 	}
 
 
-
-
-
 	glEnableVertexAttribArray(0);
 	glEnableVertexAttribArray(1);
 	glEnableVertexAttribArray(2);
@@ -515,14 +508,6 @@ int main() {
 
 		//物理演算1ステップ進める
 		dynamicsWorld->stepSimulation(1 / 60.f, 10);
-
-
-	dp = opendir(path);
-	if (dp==NULL) exit(1);
-	entry = readdir(dp);
-	while (entry != NULL) {
-		std::string filename(entry->d_name);
-		if (split(filename,'.').size() >= 2 && split(filename, '.')[1] == "friends") {
 
 
 		// :: OpenGL描画 ::
@@ -767,18 +752,6 @@ int main() {
 		dllList.pop_back();
 	}
 
-
-	while (elementManager::elementManagerList.empty() == false) {
-		delete elementManager::elementManagerList.back();
-		elementManager::elementManagerList.pop_back();
-	}
-
-	delete dynamicsWorld;
-	delete solver;
-	delete dispatcher;
-	delete collisionConfiguration;
-	delete broadphase;
-
 	while (elementManager::elementManagerList.empty() == false) {
 		delete elementManager::elementManagerList.back();
 		elementManager::elementManagerList.pop_back();
@@ -795,8 +768,6 @@ int main() {
 
 	// Close OpenGL window and terminate GLFW
 	glfwTerminate();
-
-
 
 	return 0;
 }
