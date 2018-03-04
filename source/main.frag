@@ -68,5 +68,4 @@ void main(){
 
 	color = MaterialAmbientColor
 		  + visibility * MaterialDiffuseColor * LightColor * LightPower * cosTheta;
-
 }

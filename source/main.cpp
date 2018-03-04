@@ -57,6 +57,7 @@ GLuint uniform_shadowmap2;
 GLuint uniform_shadowmap3;
 
 
+btDiscreteDynamicsWorld* dynamicsWorld;
 
 
 btDiscreteDynamicsWorld* dynamicsWorld;
@@ -235,7 +236,6 @@ btQuaternion btcreateq(double RotationAngle, double RotationAxisX, double Rotati
 	double w = cos(RotationAngle / 2);
 	return btQuaternion(x, y, z, w);
 }
-
 
 
 int main() {
@@ -434,7 +434,6 @@ int main() {
 	//頂点バッファオブジェクトを作る
 	initVBO();
 
-
 	initPrimitives();
 
 	//フォント描画モジュールの初期化
@@ -503,6 +502,7 @@ int main() {
 	glEnableVertexAttribArray(6);
 
 
+	initPrimitives();
 
 	//毎フレーム描画
 	while (glfwWindowShouldClose(window) == GL_FALSE) {
@@ -516,6 +516,13 @@ int main() {
 		//物理演算1ステップ進める
 		dynamicsWorld->stepSimulation(1 / 60.f, 10);
 
+
+	dp = opendir(path);
+	if (dp==NULL) exit(1);
+	entry = readdir(dp);
+	while (entry != NULL) {
+		std::string filename(entry->d_name);
+		if (split(filename,'.').size() >= 2 && split(filename, '.')[1] == "friends") {
 
 
 		// :: OpenGL描画 ::
@@ -689,7 +696,6 @@ int main() {
 
 		glUseProgram(programID);
 
-
 		glm::mat4 biasMatrix(
 			0.5, 0.0, 0.0, 0.0,
 			0.0, 0.5, 0.0, 0.0,
@@ -761,6 +767,17 @@ int main() {
 		dllList.pop_back();
 	}
 
+
+	while (elementManager::elementManagerList.empty() == false) {
+		delete elementManager::elementManagerList.back();
+		elementManager::elementManagerList.pop_back();
+	}
+
+	delete dynamicsWorld;
+	delete solver;
+	delete dispatcher;
+	delete collisionConfiguration;
+	delete broadphase;
 
 	while (elementManager::elementManagerList.empty() == false) {
 		delete elementManager::elementManagerList.back();

@@ -21,7 +21,6 @@ uniform mat4 DepthBiasVP2;
 uniform mat4 DepthBiasVP3;
 
 void main(){
-
 	gl_Position =  P * V * M * vec4(vertexPosition_modelspace ,1);
 	fragmentColor = vertexColor;
 
@@ -31,6 +30,5 @@ void main(){
 	shadowCoord1 = DepthBiasVP1 * M * vec4(vertexPosition_modelspace, 1);
 	shadowCoord2 = DepthBiasVP2 * M * vec4(vertexPosition_modelspace, 1);
 	shadowCoord3 = DepthBiasVP3 * M * vec4(vertexPosition_modelspace, 1);
-
 }
 
